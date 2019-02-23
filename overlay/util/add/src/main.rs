@@ -5,7 +5,6 @@ pub use ipc::cbor::Value;
 pub use ipc::*;
 pub use plugin::*;
 
-#[macro_use]
 extern crate structopt;
 
 use std::path::PathBuf;
@@ -33,9 +32,6 @@ enum Add {
 }
 
 fn main() {
-    for a in std::env::args().enumerate() {
-        eprintln!("{:?}",a);
-    }
     let args: Add =  StructOpt::from_args();
 
     let ctx: Channel = Channel::new_from_env();

@@ -31,13 +31,15 @@ lazy_static! {
                 .read()
                 .expect("Unable to read()");
 
-        match util::directory_overlay::apply(&mut state, "./overlay") {
-            Ok(_) => (),
-            Err(e) => {
-                eprintln!("{:?}", e);
-                std::process::exit(1);
-            },
-        };
+        if let Ok(dir) = std::env::var("OVERLAY") {
+            match util::directory_overlay::apply(&mut state, &dir) {
+                Ok(_) => (),
+                Err(e) => {
+                    eprintln!("{:?}", e);
+                    std::process::exit(1);
+                },
+            };
+        }
 
         Arc::new(RwLock::new(
             state

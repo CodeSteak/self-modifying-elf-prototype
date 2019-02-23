@@ -1,14 +1,15 @@
 use ipc::*;
+use ipc::bs::*;
+use plugin::*;
+
+
 use std::os::unix::io::AsRawFd;
 use std::os::unix::net::UnixStream;
 
 use crate::ROUTING_TABLE;
 
-use ipc::bs::*;
 use std::sync::*;
-use plugin::data::hash_ref::HashRef;
-use plugin::data::Entry;
-use nix::sys::wait::waitpid;
+
 
 #[derive(Clone, Default)]
 pub struct PluginInfo {
@@ -107,42 +108,36 @@ pub fn start_plugin_by_entry(entry : &Entry, args: &[String]) -> Option<()> {
 
     Channel::new_full((p2h_host, h2p_host), ROUTING_TABLE.clone(), info.clone());
 
-    use std::process::Command;
-
     set_no_close_exec(&p2h_plugin);
     set_no_close_exec(&h2p_plugin);
 
+    use nix::sys::wait::waitpid;
 
     match fork() {
         Ok(ForkResult::Parent { child }) => {
-            waitpid(child, None);
+            let _ = waitpid(child, None);
         },
         Ok(ForkResult::Child) => {
-            //Todo .env("PluginToHost_FD", format!("{}", p2h_plugin.as_raw_fd()))
-            //        .env("HostToPlugin_FD", format!("{}", h2p_plugin.as_raw_fd()))
-            let mut args : Vec<CString> = args.iter().map(|s| CString::new(s.clone()).unwrap()).collect();
-            //args.push(CString::new("").unwrap());
+            let args : Vec<CString> = args.iter().map(|s| CString::new(s.clone()).unwrap()).collect();
 
             let extra_env = vec![
                 ("PluginToHost_FD".to_string(),  format!("{}",p2h_plugin.as_raw_fd())),
                 ("HostToPlugin_FD".to_string(),  format!("{}",h2p_plugin.as_raw_fd())),
             ];
 
-            let mut env : Vec<CString> =  extra_env.into_iter().chain(std::env::vars()).map(|(k,v)|{
+            let env : Vec<CString> =  extra_env.into_iter().chain(std::env::vars()).map(|(k,v)|{
                 CString::new(format!("{}={}",k,v)).unwrap()
             }).collect();
 
-            fexecve(mem_fd, &args, &env);
-
-            panic!("Exec failed!");
+            let _e = fexecve(mem_fd, &args, &env);
+            panic!("Exec failed! ");
         },
         Err(e) => {
             panic!("Fork failed! {} ", e);
         }
     }
 
-    close(mem_fd);
-
+    let _ = close(mem_fd);
     Some(())
 }
 

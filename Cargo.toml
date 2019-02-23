@@ -12,3 +12,6 @@ nix = "0.13"
 serde = { version = "1.0", features = ["derive", "rc"] }
 blake2-rfc = "0.2.18"
 plugin = {path = "./plugin"}
+
+[profile.release]
+lto = true

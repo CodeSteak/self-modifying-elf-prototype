@@ -82,7 +82,6 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
                 let mut path = path.clone();
                 path.pop(); // pop this file
                 path.push(arg);
-                //println!("Cargoing {:?}", &path);
 
                 use std::process::*;
 
@@ -185,7 +184,7 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
                     (Some(a), value) if !a.is_empty() => {
                         tags.insert(Tag::new(a, value));
                     },
-                    (Some(a), value) => {
+                    (Some(_empty), _value) => {
                         // skip
                     }
                     (None,None) => {

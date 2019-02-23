@@ -8,3 +8,6 @@ edition = "2018"
 ipc = { path = "../../../ipc" }
 plugin = { path = "../../../plugin" }
 structopt = { version = "0.2", default-features = false }
+
+[profile.release]
+lto = true

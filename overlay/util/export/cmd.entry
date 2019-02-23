@@ -1,0 +1,4 @@
+command/export
+    .type ELF
+    command export
+#cargo .
