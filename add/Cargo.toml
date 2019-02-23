@@ -1,0 +1,10 @@
+[package]
+name = "add"
+version = "0.1.0"
+authors = ["CodeSteak <codesteak@shellf.art>"]
+edition = "2018"
+
+[dependencies]
+ipc = { path = "../ipc" }
+plugin = { path = "../plugin" }
+structopt = { version = "0.2", default-features = false }

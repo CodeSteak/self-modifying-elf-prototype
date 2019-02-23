@@ -1,0 +1,8 @@
+[package]
+name = "ls_route"
+version = "0.1.0"
+authors = ["CodeSteak <codesteak@shellf.art>"]
+edition = "2018"
+
+[dependencies]
+ipc = {path = "../ipc"}

@@ -1,0 +1,16 @@
+[package]
+name = "microwiki_derive"
+version = "0.1.0"
+authors = ["CodeSteak <codesteak@shellf.art>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "0.6.10"
+proc-macro2 = "0.4"
+
+[dependencies.syn]
+version = "0.15"
+features = ["full"]

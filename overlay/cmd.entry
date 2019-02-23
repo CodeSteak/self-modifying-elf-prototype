@@ -1,0 +1,37 @@
+.add
+    .type ELF
+    command add
+#cargo ../add
+
+.ls_route
+    .type ELF
+    command ls
+#cargo ../ls_route
+
+.web
+    .type ELF
+    command web
+#cargo ../web
+
+.index.html
+    .type html
+#include ../web/static/index.html
+
+.index.js
+    .type js
+#include ../web/static/index.js
+
+.index.css
+    .type css
+#include ../web/static/index.css
+
+cmd.entry
+    .type text
+#include cmd.entry
+
+Test Message
+    .type text
+
+<<EOF
+Dies ist ein Beispiel Text!
+EOF

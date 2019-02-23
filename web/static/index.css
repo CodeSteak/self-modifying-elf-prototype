@@ -1,0 +1,125 @@
+body {
+  background-color: SlateGray;
+}
+
+body > ul {
+  padding: 1em;
+  margin: 1em;
+  background-color: white;
+}
+
+body > ul > li {
+  display: inline-block;
+}
+
+body > ul > li > a {
+  display: inline-block;
+  background-color: DimGray  ;
+  color: white;
+  font-size: 100%;
+  padding: 0.5em 2em;
+  border-radius: 1em;
+  margin: 1em;
+}
+
+section.entry {
+  margin: 1em auto;
+  max-width: 80em;
+  background-color: white;
+  border-radius: 0.2em;
+  box-shadow: 0.5em 0.5em 0.5em rgba(0,0,0,0.5);
+
+  transition: all 0.05s ease-in-out;
+
+  overflow: hidden;
+
+  /* Grid */
+  display: grid;
+  grid-template-areas:
+     "hea edt cls"
+     "tag tag tag"
+     "cnt cnt .";
+  grid-template-columns: auto 4em 4em;
+  grid-template-rows: 4em auto;
+}
+
+section.entry.fullscreen {
+  position: absolute;
+  top: 1vw;
+  left: 1vw;
+
+  margin: 0em;
+
+  max-width: none;
+  width: 98vw;
+  height: 98vh;
+
+  overflow: scroll;
+}
+
+section.deleted {
+   margin-top: -1em;
+   margin-bottom: 0em;
+
+   transition: all 0.3s ease-in-out;
+}
+
+section.entry > button {
+  background-color: DarkSlateGray ;
+  border: none;
+  font-size: 2em;
+}
+
+section.entry > button.close {
+  display: block;
+  grid-area: cls;
+}
+
+section.entry > button.edit {
+  display: block;
+  grid-area: edt;
+}
+
+section.entry > h1 {
+  margin: 0em;
+  padding-left: 1em;
+  background-color: DarkSlateGray ;
+  color: wheat;
+  vertical-align: middle;
+
+
+  font-size: 2em;
+  line-height: 2em;
+  height: 100%;
+  display: block;
+  grid-area: hea;
+}
+
+section.entry > ul.tags {
+  grid-area: tag;
+}
+
+section.entry > ul.tags > li {
+  display: inline-block;
+  background-color: DimGray ;
+  color: white;
+  font-size: 100%;
+  padding: 0.5em 2em;
+  border-radius: 1em;
+}
+
+section.entry > div {
+  display: block;
+  grid-area: cnt;
+  padding: 2em;
+}
+
+section.entry > div > audio {
+  width: 100%;
+  height: 10em;
+}
+
+section.entry > div > iframe {
+  width: 100%;
+  height: 75vh;
+}

@@ -1,0 +1,10 @@
+[package]
+name = "ipc"
+version = "0.1.0"
+authors = ["CodeSteak <codesteak@shellf.art>"]
+edition = "2018"
+
+[dependencies]
+bufstream = "0.1"
+serde = { version = "1.0"}
+serde_cbor = "0.9.0"
