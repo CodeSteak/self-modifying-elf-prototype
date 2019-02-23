@@ -24,7 +24,7 @@ impl Tag {
 
 pub mod tag_names {
     pub mod types {
-        pub const TAG: &'static str = ".type";
+        pub const TAG: &'static str = "type";
 
         pub const TEXT: &'static str = "text";
         pub const ELF: &'static str = "ELF";

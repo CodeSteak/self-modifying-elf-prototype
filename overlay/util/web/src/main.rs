@@ -10,7 +10,7 @@ use util::*;
 mod resources;
 
 fn main() {
-    let mut ch: Channel = Channel::new_from_env();
+    let ch: Channel = Channel::new_from_env();
 
     let sys = actix::System::new("sys");
 

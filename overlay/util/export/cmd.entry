@@ -1,4 +1,4 @@
 command/export
-    .type ELF
+    type ELF
     command export
 #cargo .

@@ -78,7 +78,25 @@ pub fn start_plugin_via_cargo(sub_dir: &str, args: &[String]) {
     cmd.wait().expect("failed to wait on child");
 }
 
-pub fn start_plugin_by_entry(entry : &Entry, args: &[String]) -> Option<()> {
+pub struct ChildPid {
+    pid : nix::unistd::Pid,
+}
+
+impl ChildPid {
+    pub fn wait(self) {
+        use nix::sys::wait::*;
+        let _ = waitpid(self.pid, None);
+    }
+
+    pub fn kill(self) {
+        use nix::sys::signal::*;
+
+        let _ = kill(self.pid,SIGINT);
+        self.wait()
+    }
+}
+
+pub fn start_plugin_by_entry(entry : &Entry, args: &[String]) -> Option<ChildPid> {
 
     let data= crate::core::hash::read((entry.data.clone(),))?;
     use nix::sys::memfd::*;
@@ -111,11 +129,10 @@ pub fn start_plugin_by_entry(entry : &Entry, args: &[String]) -> Option<()> {
     set_no_close_exec(&p2h_plugin);
     set_no_close_exec(&h2p_plugin);
 
-    use nix::sys::wait::waitpid;
-
     match fork() {
         Ok(ForkResult::Parent { child }) => {
-            let _ = waitpid(child, None);
+            let _ = close(mem_fd);
+            Some(ChildPid { pid : child })
         },
         Ok(ForkResult::Child) => {
             let args : Vec<CString> = args.iter().map(|s| CString::new(s.clone()).unwrap()).collect();
@@ -136,10 +153,8 @@ pub fn start_plugin_by_entry(entry : &Entry, args: &[String]) -> Option<()> {
             panic!("Fork failed! {} ", e);
         }
     }
-
-    let _ = close(mem_fd);
-    Some(())
 }
+
 
 fn set_no_close_exec<S: AsRawFd>(fd: &S) {
     use nix::fcntl::*;

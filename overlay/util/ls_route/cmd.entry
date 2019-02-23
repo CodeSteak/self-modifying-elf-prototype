@@ -1,4 +1,4 @@
 command/ls
-    .type ELF
+    type ELF
     command ls
 #cargo .

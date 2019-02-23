@@ -11,7 +11,7 @@ fn entry(req: &HttpRequest<AppState>) -> HttpResponse {
 
 fn entry_html(req: &HttpRequest<AppState>) -> HttpResponse {
     (|| {
-        let mut ctx = req.state().ctx.clone();
+        let ctx = req.state().ctx.clone();
         let p: String = req.match_info().get("name").and_then(url_decode)?;
         let item: Entry = ctx
             .call::<_, Vec<Entry>>(&(
@@ -23,7 +23,7 @@ fn entry_html(req: &HttpRequest<AppState>) -> HttpResponse {
             .into_iter()
             .next()?;
 
-        let mut get_data /*: FnOnce() -> Option<Vec<u8>>*/ = || {
+        let get_data /*: FnOnce() -> Option<Vec<u8>>*/ = || {
             let vec : Vec<u8> = (ctx.call::<_,ByteBuf>(&("core","hash","read",&item.data)) as Option<ByteBuf>)?.into();
             Some(vec)
         };

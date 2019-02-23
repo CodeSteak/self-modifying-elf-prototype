@@ -1,9 +1,9 @@
 cmd.entry
-    .type text
+    type text
 #include cmd.entry
 
 Test Message
-    .type text
+    type text
 
 <<EOF
 Dies ist ein Beispiel Text!
