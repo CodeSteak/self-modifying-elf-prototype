@@ -16,7 +16,7 @@ pub fn apply<P : Into<PathBuf>>(state : &mut State, path : P) -> Result<()> {
             if entry.file_type()?.is_dir() {
                 todo.push(entry.path())
             } else if entry.path().extension().and_then(|s| s.to_str()) == Some("entry") {
-                //println!("Loading {:?}", entry.path());
+                println!("Loading {:?}", entry.path());
                 parse_entry_file(state, entry.path())?;
             }
         }
@@ -24,6 +24,12 @@ pub fn apply<P : Into<PathBuf>>(state : &mut State, path : P) -> Result<()> {
 
     Ok(())
 }
+
+
+#[cfg(debug_assertions)]
+const DEBUG : bool = true;
+#[cfg(not(debug_assertions))]
+const DEBUG : bool = false;
 
 // Don't try to read this code....
 // This is for DEV purposes only.
@@ -80,20 +86,55 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
 
                 use std::process::*;
 
-                let mut cargo = Command::new("cargo")
-                    .arg("build")
-                    .arg("--release")
-                    .current_dir(path.clone())
-                    .spawn()
-                    .unwrap();
+                let mut cargo = if  DEBUG {
+                    Command::new("cargo")
+                        .arg("build")
+                        .current_dir(path.clone())
+                        .spawn()
+                        .unwrap()
+                } else {
+                    Command::new("cargo")
+                        .arg("build")
+                        .arg("--release")
+                        .current_dir(path.clone())
+                        .spawn()
+                        .unwrap()
+                };
+
                 if !cargo.wait()?.success() {
                     panic!("Aborting... Cargo returned with != 0");
                 }
 
                 let proj_name = path.components().last().unwrap().as_os_str().to_owned();
                 path.push("target");
-                path.push("release");
+
+                if DEBUG {
+                    path.push("debug");
+                } else {
+                    path.push("release");
+                }
+
                 path.push(proj_name);
+
+                if !DEBUG {
+
+                    if let Ok(_) = std::env::var("USE_STRIP") {
+                        let _ = Command::new("strip")
+                            .arg(&path)
+                            .spawn()
+                            .unwrap()
+                            .wait();
+                    }
+
+                    if let Ok(_) = std::env::var("USE_UPX") {
+                        let _ = Command::new("upx")
+                            .arg("--best")
+                            .arg(&path)
+                            .spawn()
+                            .unwrap()
+                            .wait();
+                    }
+                }
 
                 let mut data = vec![];
                 let mut file = File::open(&mut path)?;

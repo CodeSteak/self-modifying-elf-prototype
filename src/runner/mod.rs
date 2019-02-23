@@ -77,7 +77,6 @@ pub fn start_plugin_via_cargo(sub_dir: &str, args: &[String]) {
     cmd.wait().expect("failed to wait on child");
 }
 
-
 pub fn start_plugin_by_entry(entry : &Entry, args: &[String]) -> Option<()> {
 
     let data= crate::core::hash::read((entry.data.clone(),))?;

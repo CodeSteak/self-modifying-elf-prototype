@@ -5,4 +5,4 @@ authors = ["CodeSteak <codesteak@shellf.art>"]
 edition = "2018"
 
 [dependencies]
-ipc = {path = "../ipc"}
+ipc = {path = "../../../ipc"}

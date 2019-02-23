@@ -1,0 +1,16 @@
+command/web
+    .type ELF
+    command web
+#cargo .
+
+web-ui/index.html
+    .type html
+#include static/index.html
+
+web-ui/index.css
+    .type css
+#include static/index.css
+
+web-ui/index.js
+    .type js
+#include static/index.js

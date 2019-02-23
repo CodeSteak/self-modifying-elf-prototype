@@ -5,7 +5,7 @@ authors = ["CodeSteak <codesteak@shellf.art>"]
 edition = "2018"
 
 [dependencies]
-ipc = { path = "../ipc" }
-plugin = { path = "../plugin" }
+ipc = { path = "../../../ipc" }
+plugin = { path = "../../../plugin" }
 actix-web = "0.7.18"
 serde_json = "1.0"

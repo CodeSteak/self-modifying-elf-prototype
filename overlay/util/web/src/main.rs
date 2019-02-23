@@ -24,7 +24,7 @@ fn main() {
                 "/hash/{hash:[a-fA-F0-9]{64}}{ext:[\\./].*}",
                 resources::hash_ext,
             )
-            .resource("/entry/{name}", resources::entry)
+            .resource("/entry/{name:.*}", resources::entry)
             //.handler("/static", fs::StaticFiles::new("./static").unwrap())
             .default_resource(|r| {
                 r.f(|_| HttpResponse::NotFound().body("<h1>404</h1><h3>Not found!</h3>"))
