@@ -32,7 +32,7 @@ enum Add {
 }
 
 fn main() {
-    let args: Add =  StructOpt::from_args();
+    let args: Add = StructOpt::from_args();
 
     let ctx: Channel = Channel::new_from_env();
 
@@ -55,7 +55,10 @@ fn main() {
                 .expect("Unable to open file!")
                 .read_to_end(&mut data)
                 .expect("Unable to read full file.");
-            let name = name.as_ref().map(|s| s.as_str()).unwrap_or_else(|| path.as_os_str().to_str().unwrap());
+            let name = name
+                .as_ref()
+                .map(|s| s.as_str())
+                .unwrap_or_else(|| path.as_os_str().to_str().unwrap());
             add_data(&ctx, name, data);
             if let Some(ext) = path
                 .extension()
@@ -73,35 +76,42 @@ fn main() {
 fn add_data(ctx: &Channel, name: &str, data: Vec<u8>) {
     let hash_ref = HashRef::from_data(&data);
 
-    let v: Option<Value> = ctx.call(&(
-        "core",
-        "entry",
-        "write",
-        WriteOperation::AddSmallData { data },
-    ));
+    let v: Option<Value> =
+        ctx.call(&("core", "entry", "write", WriteOperation::SmallData { data }));
     dbg!(v.unwrap());
 
     let v: Option<Value> = ctx.call(&(
         "core",
         "entry",
         "write",
-        WriteOperation::AddEntry {
-            name: name.to_owned(),
-            data: hash_ref,
+        WriteOperation::Entry {
+            old: None,
+            new: Some(Entry {
+                name: name.to_owned(),
+                data: hash_ref,
+                tags: Default::default(),
+            }),
         },
     ));
     dbg!(v.unwrap());
 }
 
 fn add_tag(ctx: &Channel, name: &str, tag: &str, tag_value: Option<&str>) {
+    let mut new: Entry = ctx
+        .call(&("core", "entry", "read", name))
+        .expect("Didn't find entry!");
+
+    new.tags.insert(Tag::new(tag, tag_value));
+
     let v: Option<Value> = ctx.call(&(
         "core",
         "entry",
         "write",
-        WriteOperation::AddTag {
-            name: name.to_owned(),
-            tag: Tag::new(tag, tag_value),
+        WriteOperation::Entry {
+            old: None,
+            new: Some(new),
         },
     ));
+
     dbg!(v.unwrap());
 }

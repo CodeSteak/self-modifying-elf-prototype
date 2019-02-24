@@ -1,12 +1,12 @@
 use crate::prelude::*;
-use std::fs::{self, *};
-use std::path::*;
-use std::io::*;
-use std::io::Result;
 use std::collections::*;
+use std::fs::{self, *};
+use std::io::Result;
+use std::io::*;
+use std::path::*;
 use std::sync::*;
 
-pub fn apply<P : Into<PathBuf>>(state : &mut State, path : P) -> Result<()> {
+pub fn apply<P: Into<PathBuf>>(state: &mut State, path: P) -> Result<()> {
     let mut todo = vec![path.into()];
 
     while let Some(dir) = todo.pop() {
@@ -25,18 +25,17 @@ pub fn apply<P : Into<PathBuf>>(state : &mut State, path : P) -> Result<()> {
     Ok(())
 }
 
-
 #[cfg(debug_assertions)]
-const DEBUG : bool = true;
+const DEBUG: bool = true;
 #[cfg(not(debug_assertions))]
-const DEBUG : bool = false;
+const DEBUG: bool = false;
 
 // Don't try to read this code....
 // This is for DEV purposes only.
-pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
-    const INCLUDE_TOKEN : &str = "#include";
-    const CARGO_TOKEN : &str = "#cargo";
-    const CONTENT_TOKEN : &str = "<<";
+pub fn parse_entry_file(state: &mut State, path: PathBuf) -> Result<()> {
+    const INCLUDE_TOKEN: &str = "#include";
+    const CARGO_TOKEN: &str = "#cargo";
+    const CONTENT_TOKEN: &str = "<<";
 
     let mut f = File::open(&path)?;
     let mut content = String::new();
@@ -45,8 +44,10 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
     let mut lines = content.lines();
 
     while let Some(name) = lines.next() {
-        if name.trim().is_empty() { continue; }
-        let mut tags : BTreeSet<Tag> = Default::default();
+        if name.trim().is_empty() {
+            continue;
+        }
+        let mut tags: BTreeSet<Tag> = Default::default();
         let name = name.trim().to_owned();
 
         while let Some(line) = lines.next() {
@@ -65,17 +66,22 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
 
                 let hash = HashRef::from_data(&data);
 
-                state.data.insert(hash.clone(), DataSource::Memory( Arc::new(data.into() )));
+                state
+                    .data
+                    .insert(hash.clone(), DataSource::Memory(Arc::new(data.into())));
                 //println!("Adding via File {}", &name);
                 //println!("\t\tTags : {:?}", &tags);
-                state.entries.insert(name.clone(), Entry {
-                    name: name.clone(),
-                    data: hash.clone(),
-                    tags: tags.clone(),
-                });
+                state.entries.insert(
+                    name.clone(),
+                    Entry {
+                        name: name.clone(),
+                        data: hash.clone(),
+                        tags: tags.clone(),
+                    },
+                );
 
                 break;
-            }else if line.starts_with(CARGO_TOKEN) {
+            } else if line.starts_with(CARGO_TOKEN) {
                 let arg = &line[CARGO_TOKEN.len()..];
                 let arg = arg.trim();
 
@@ -85,7 +91,7 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
 
                 use std::process::*;
 
-                let mut cargo = if  DEBUG {
+                let mut cargo = if DEBUG {
                     Command::new("cargo")
                         .arg("build")
                         .current_dir(path.clone())
@@ -116,13 +122,8 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
                 path.push(proj_name);
 
                 if !DEBUG {
-
                     if let Ok(_) = std::env::var("USE_STRIP") {
-                        let _ = Command::new("strip")
-                            .arg(&path)
-                            .spawn()
-                            .unwrap()
-                            .wait();
+                        let _ = Command::new("strip").arg(&path).spawn().unwrap().wait();
                     }
 
                     if let Ok(_) = std::env::var("USE_UPX") {
@@ -141,17 +142,22 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
 
                 let hash = HashRef::from_data(&data);
 
-                state.data.insert(hash.clone(), DataSource::Memory( Arc::new(data.into() )));
+                state
+                    .data
+                    .insert(hash.clone(), DataSource::Memory(Arc::new(data.into())));
                 //println!("Adding via Cargo {}", &name);
                 //println!("\t\tTags : {:?}", &tags);
-                state.entries.insert(name.clone(), Entry {
-                    name: name.clone(),
-                    data: hash.clone(),
-                    tags: tags.clone(),
-                });
+                state.entries.insert(
+                    name.clone(),
+                    Entry {
+                        name: name.clone(),
+                        data: hash.clone(),
+                        tags: tags.clone(),
+                    },
+                );
 
                 break;
-            }else if line.starts_with(CONTENT_TOKEN) {
+            } else if line.starts_with(CONTENT_TOKEN) {
                 let arg = &line[CONTENT_TOKEN.len()..];
                 let arg = arg.trim();
 
@@ -159,37 +165,43 @@ pub fn parse_entry_file(state : &mut State, path : PathBuf) -> Result<()> {
 
                 // Read until arg appears.
                 while let Some(line) = lines.next() {
-                    if line.trim() == arg { break; }
+                    if line.trim() == arg {
+                        break;
+                    }
                     data.push_str(line);
                     data.push('\n');
                 }
 
-                let data : Vec<u8> = data.into();
+                let data: Vec<u8> = data.into();
                 let hash = HashRef::from_data(&data);
 
-                state.data.insert(hash.clone(), DataSource::Memory( Arc::new(data.into() )));
+                state
+                    .data
+                    .insert(hash.clone(), DataSource::Memory(Arc::new(data.into())));
                 //println!("Adding {}", &name);
                 //println!("\t\tTags : {:?}", &tags);
-                state.entries.insert(name.clone(), Entry {
-                    name: name.clone(),
-                    data: hash.clone(),
-                    tags: tags.clone(),
-                });
+                state.entries.insert(
+                    name.clone(),
+                    Entry {
+                        name: name.clone(),
+                        data: hash.clone(),
+                        tags: tags.clone(),
+                    },
+                );
 
                 break;
-            }else {
+            } else {
                 let mut tag = line.trim().splitn(2, " ");
                 match (tag.next(), tag.next()) {
-
                     (Some(a), value) if !a.is_empty() => {
                         tags.insert(Tag::new(a, value));
-                    },
+                    }
                     (Some(_empty), _value) => {
                         // skip
                     }
-                    (None,None) => {
+                    (None, None) => {
                         // skip
-                    },
+                    }
                     (None, Some(_)) => {
                         unreachable!();
                     }

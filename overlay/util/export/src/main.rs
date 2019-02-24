@@ -14,17 +14,17 @@ use structopt::StructOpt;
 #[structopt(name = "export", about = "export and clean data")]
 struct Export {
     #[structopt(short = "o", long = "output", parse(from_os_str))]
-    file : Option<PathBuf>,
+    file: Option<PathBuf>,
 
     #[structopt(short = "e", long = "exclude-binary")]
-    exclude_binary : bool,
+    exclude_binary: bool,
 
     #[structopt(long = "force")]
-    force : bool,
+    force: bool,
 }
 
 fn main() -> std::io::Result<()> {
-    let args: Export =  StructOpt::from_args();
+    let args: Export = StructOpt::from_args();
     let ctx: Channel = Channel::new_from_env();
 
     use std::fs::*;
@@ -42,16 +42,12 @@ fn main() -> std::io::Result<()> {
     let mut file = fop.open(args.file.unwrap_or(PathBuf::from("-")))?;
 
     if !args.exclude_binary {
+        let bin: Option<ByteBuf> = ctx.call(&("core", "own_executable", "read"));
 
-        let bin : Option<ByteBuf> = ctx.call(
-            &(
-                "core",
-                "own_executable",
-                "read",
-            )
-        );
-
-        let bytes = bin.ok_or(Error::new(ErrorKind::NotFound, "Unable to read own_executable"))?;
+        let bytes = bin.ok_or(Error::new(
+            ErrorKind::NotFound,
+            "Unable to read own_executable",
+        ))?;
 
         file.write_all(bytes.as_ref())?;
     }
@@ -61,33 +57,26 @@ fn main() -> std::io::Result<()> {
         .ok_or(Error::new(ErrorKind::NotFound, "Unable to read entries."))?;
 
     for e in res {
-
         println!("\t\t\t + {}", &e.name);
 
-        let data = ctx.call::<_, ByteBuf>(&("core", "hash", "read", &e.data))
-            .ok_or(Error::new(ErrorKind::NotFound, "Unable to read data from entity."))?;;
+        let data = ctx
+            .call::<_, ByteBuf>(&("core", "hash", "read", &e.data))
+            .ok_or(Error::new(
+                ErrorKind::NotFound,
+                "Unable to read data from entity.",
+            ))?;;
 
-        let wr_op = WriteOperation::AddSmallData { data : data.into() };
+        let wr_op = WriteOperation::SmallData { data: data.into() };
         cbor::to_writer(&mut file, &wr_op)
             .map_err(|_| Error::new(ErrorKind::Other, "Couldn't write data."))?;
 
-        let ep_op = WriteOperation::AddEntry {
-            name : e.name.clone(),
-            data : e.data.clone(),
+        let ep_op = WriteOperation::Entry {
+            old: None,
+            new: Some(e),
         };
 
         cbor::to_writer(&mut file, &ep_op)
             .map_err(|_| Error::new(ErrorKind::Other, "Couldn't write entry."))?;
-
-        for tag in e.tags.iter() {
-            let tag_op = WriteOperation::AddTag {
-                name : e.name.clone(),
-                tag  : tag.clone(),
-            };
-
-            cbor::to_writer(&mut file, &tag_op)
-                .map_err(|_| Error::new(ErrorKind::Other, "Couldn't write tag."))?;
-        }
     }
 
     Ok(())

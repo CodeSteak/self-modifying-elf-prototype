@@ -1587,6 +1587,7 @@ dependencies = [
  "actix-web 0.7.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "ipc 0.1.0",
  "plugin 0.1.0",
+ "serde 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.38 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

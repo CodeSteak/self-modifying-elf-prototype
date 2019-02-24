@@ -38,7 +38,7 @@ pub(crate) fn html_encode(s: &str) -> String {
             'A'..='Z' => result.push(b),
             '\n' => {
                 result += &format!("<br/>");
-            },
+            }
             _ => {
                 result += &format!("&#x{:04X};", b as u32);
             }

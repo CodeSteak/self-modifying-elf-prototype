@@ -26,23 +26,26 @@ pub fn write((op,): (WriteOperation,)) -> Option<bool> {
 }
 
 #[service(("core","own_executable","read"))]
-pub fn read_binary(_ : Vec<()>) -> Option<ByteBuf> {
+pub fn read_binary(_: Vec<()>) -> Option<ByteBuf> {
     read_binary_inner().ok()
 }
 
 fn read_binary_inner() -> Result<ByteBuf> {
-    let mut file = File
-        ::open(std::env::args().nth(0).unwrap()).expect("Unable to read own Executable!");
+    let mut file =
+        File::open(std::env::args().nth(0).unwrap()).expect("Unable to read own Executable!");
 
     let offset = std::env::var("SELF_OFFSET");
 
     if let Ok(size) = offset {
-        let size : usize = size.parse().expect("Invalid SELF_OFFSET env var.");
+        let size: usize = size.parse().expect("Invalid SELF_OFFSET env var.");
         let mut vec = vec![0u8; size];
-        let len =  file.read(&mut vec[..])?;
+        let len = file.read(&mut vec[..])?;
 
         if len != size as usize {
-            return Err( Error::new(ErrorKind::UnexpectedEof, "Could not read full binary.") )
+            return Err(Error::new(
+                ErrorKind::UnexpectedEof,
+                "Could not read full binary.",
+            ));
         }
 
         Ok(vec.into())
@@ -148,7 +151,7 @@ impl OwnExecutable {
             ));
         }
 
-        cbor::to_writer(&mut file, op).expect("TODO");
+        cbor::to_writer(&mut file, op).expect("Could not write to file.");
 
         Ok(())
     }

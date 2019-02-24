@@ -1,8 +1,44 @@
 use crate::util::*;
+use serde::Deserialize;
+use std::collections::BTreeSet;
 
 pub(crate) fn register(r: &mut Resource<AppState>) {
     r.name("entry");
-    r.f(entry);
+    r.method(http::Method::GET).f(entry);
+    r.method(http::Method::DELETE).f(entry_delete)
+}
+
+pub(crate) fn register_upload(r: &mut Resource<AppState>) {
+    r.name("entry_upload");
+    r.method(http::Method::POST)
+        .with_config(entry_upload, |((cfg, _),)| {
+            cfg.limit(16 * 1024);
+        });
+}
+
+fn entry_delete(req: &HttpRequest<AppState>) -> HttpResponse {
+    (|| {
+        let ctx = req.state().ctx.clone();
+
+        let name: String = req.match_info().get("name").and_then(url_decode)?;
+
+        let b: Option<bool> = ctx.call(&(
+            "core",
+            "entry",
+            "write",
+            WriteOperation::Entry {
+                old: Some(name.clone()),
+                new: None,
+            },
+        ));
+
+        if let Some(true) = b {
+            Some(HttpResponse::Ok().json(b))
+        } else {
+            Some(HttpResponse::NotFound().json(b))
+        }
+    })()
+    .unwrap_or_else(|| HttpResponse::NotFound().body("Not Found!"))
 }
 
 fn entry(req: &HttpRequest<AppState>) -> HttpResponse {
@@ -113,4 +149,46 @@ fn entry_html(req: &HttpRequest<AppState>) -> HttpResponse {
         }
     })()
     .unwrap_or_else(|| HttpResponse::NotFound().body("Not Found!"))
+}
+
+#[derive(Deserialize)]
+struct EntryUpload {
+    old_name: Option<String>,
+    name: String,
+    data: HashRef,
+    tags: BTreeSet<(String, Option<String>)>,
+}
+
+fn entry_upload((data, req): (Json<EntryUpload>, HttpRequest<AppState>)) -> HttpResponse {
+    let ctx = req.state().ctx.clone();
+
+    let b: Option<bool> = ctx.call(&(
+        "core",
+        "entry",
+        "write",
+        WriteOperation::Entry {
+            old: data.old_name.clone(),
+            new: Some(Entry {
+                name: data.name.clone(),
+                data: data.data.clone(),
+                tags: data
+                    .tags
+                    .iter()
+                    .map(|(k, v)| {
+                        if let Some(val) = v {
+                            Tag::new(k, (*val).as_str())
+                        } else {
+                            Tag::new(k, None)
+                        }
+                    })
+                    .collect(),
+            }),
+        },
+    ));
+
+    if let Some(true) = b {
+        HttpResponse::Ok().json(b)
+    } else {
+        HttpResponse::BadRequest().json(b)
+    }
 }

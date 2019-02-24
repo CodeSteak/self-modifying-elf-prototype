@@ -11,9 +11,21 @@ pub fn query((q,): (QueryOperation,)) -> Option<Vec<Entry>> {
     q.apply(&*state).into()
 }
 
+#[service(("core","entry","read", NULL))]
+pub fn read((s,): (String,)) -> Option<Entry> {
+    let state = GLOBAL_STATE.read().unwrap();
+
+    state.entries.get(&s).cloned()
+}
+
 #[service(("core","entry","write", NULL))]
 pub fn write((op,): (WriteOperation,)) -> Option<bool> {
     let mut state = GLOBAL_STATE.write().unwrap();
-    crate::core::file::write((op.clone(),))?;
-    op.apply(&mut *state).into()
+
+    let change = op.clone().apply(&mut *state);
+    if change {
+        crate::core::file::write((op.clone(),))?;
+    }
+
+    Some(change)
 }

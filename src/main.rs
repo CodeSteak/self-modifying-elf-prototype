@@ -5,15 +5,15 @@ extern crate lazy_static;
 extern crate microwiki_derive;
 extern crate ipc;
 extern crate nix;
-extern crate plugin;
 extern crate notify;
+extern crate plugin;
 
 use std::sync::*;
 
 use ipc::*;
 
-pub use runner::PluginInfo;
 use plugin::interface::QueryOperation;
+pub use runner::PluginInfo;
 
 pub mod core;
 pub mod prelude;
@@ -27,14 +27,12 @@ lazy_static! {
 lazy_static! {
     pub static ref GLOBAL_STATE: Arc<RwLock<prelude::State>> = {
         let state = core::file::DATA
-                .lock()
-                .unwrap()
-                .read()
-                .expect("Unable to read()");
+            .lock()
+            .unwrap()
+            .read()
+            .expect("Unable to read()");
 
-        Arc::new(RwLock::new(
-            state
-        ))
+        Arc::new(RwLock::new(state))
     };
 }
 
@@ -50,31 +48,29 @@ fn normal_main() {
     let cmd = std::env::args().nth(1).expect("1 Argument needed");
 
     let q = QueryOperation::And(vec![
-        QueryOperation::ByTag(prelude::Tag::new("command",cmd.as_str())),
-        QueryOperation::ByTag(prelude::Tag::new("type","ELF"))
+        QueryOperation::ByTag(prelude::Tag::new("command", cmd.as_str())),
+        QueryOperation::ByTag(prelude::Tag::new("type", "ELF")),
     ]);
     let entities = crate::core::entry::query((q,)).unwrap();
     let ent = entities.get(0).expect("Command Not Found!");
 
-    let args =  std::env::args().skip(1).collect::<Vec<String>>();
+    let args = std::env::args().skip(1).collect::<Vec<String>>();
     runner::start_plugin_by_entry(ent, &args).unwrap().wait();
 }
 
-fn overlay_main(dir : String) {
-    use notify::{RecommendedWatcher, Watcher, RecursiveMode};
-    use std::time::*;
+fn overlay_main(dir: String) {
+    use notify::{RecommendedWatcher, RecursiveMode, Watcher};
     use std::sync::mpsc::channel;
-
+    use std::time::*;
 
     let (tx, rx) = channel();
 
-    let mut watcher: RecommendedWatcher = Watcher::new(tx, Duration::from_secs(5)).unwrap();
+    let mut watcher: RecommendedWatcher = Watcher::new_raw(tx).unwrap();
     watcher.watch(&dir, RecursiveMode::Recursive).unwrap();
-
 
     let cmd = std::env::args().nth(1).expect("1 Argument needed");
 
-    extern fn die_on_signal(_signal: i32) {
+    extern "C" fn die_on_signal(_signal: i32) {
         std::process::exit(0);
     }
 
@@ -84,15 +80,15 @@ fn overlay_main(dir : String) {
             Err(e) => {
                 eprintln!("{:?}", e);
                 std::process::exit(1);
-            },
+            }
         };
 
         let q = QueryOperation::And(vec![
             QueryOperation::ByTag(prelude::Tag::new("command", cmd.as_str())),
-            QueryOperation::ByTag(prelude::Tag::new("type", "ELF"))
+            QueryOperation::ByTag(prelude::Tag::new("type", "ELF")),
         ]);
 
-        let entities = crate::core::entry::query((q, )).unwrap();
+        let entities = crate::core::entry::query((q,)).unwrap();
         let ent = entities.get(0).expect("Command Not Found!");
 
         let args = std::env::args().skip(1).collect::<Vec<String>>();
@@ -103,7 +99,7 @@ fn overlay_main(dir : String) {
         let handler = SigHandler::Handler(die_on_signal);
         unsafe { signal(Signal::SIGCHLD, handler) }.unwrap();
 
-        while let Ok(_) = rx.try_recv() {/* SKIP */}
+        while let Ok(_) = rx.try_recv() { /* SKIP */ }
         rx.recv().unwrap();
 
         std::thread::sleep(Duration::from_millis(25));

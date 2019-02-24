@@ -9,6 +9,7 @@ ipc = { path = "../../../ipc" }
 plugin = { path = "../../../plugin" }
 actix-web = "0.7.18"
 serde_json = "1.0"
+serde = { version = "1.0" }
 
 [profile.release]
 lto = true

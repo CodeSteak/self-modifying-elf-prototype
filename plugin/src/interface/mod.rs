@@ -56,27 +56,11 @@ impl QueryOperation {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum WriteOperation {
-    AddEntry {
-        name: String,
-        data: HashRef,
+    Entry {
+        old: Option<String>,
+        new: Option<Entry>,
     },
-    UpdateEntry {
-        name: String,
-        new_name: Option<String>,
-        new_data: Option<HashRef>,
-    },
-    RemoveEntry {
-        name: String,
-    },
-    AddTag {
-        name: String,
-        tag: Tag,
-    },
-    RemoveTag {
-        name: String,
-        tag: Tag,
-    },
-    AddSmallData {
+    SmallData {
         #[serde(with = "serde_bytes")]
         data: Vec<u8>,
     },
@@ -85,70 +69,33 @@ pub enum WriteOperation {
 impl WriteOperation {
     pub fn apply(self, state: &mut State) -> bool {
         match self {
-            WriteOperation::AddEntry { name, data } => {
-                if !state.data.contains_key(&data) {
-                    return false;
+            WriteOperation::Entry { old, new } => {
+                if let Some(new) = &new {
+                    if !state.data.contains_key(&new.data) {
+                        return false;
+                    }
                 }
 
-                state.entries.insert(
-                    name.clone(),
-                    Entry {
-                        name,
-                        tags: Default::default(),
-                        data,
-                    },
-                );
+                if let Some(old) = old {
+                    state.entries.remove(&old);
+                }
+
+                if let Some(new) = new {
+                    state.entries.insert(new.name.clone(), new);
+                }
 
                 true
             }
-            WriteOperation::UpdateEntry {
-                name,
-                new_name,
-                new_data,
-            } => {
-                if let Some(mut entry) = state.entries.remove(&name) {
-                    if let Some(data) = new_data {
-                        entry.data = data;
-                    }
-
-                    let name = new_name.unwrap_or(name).clone();
-                    entry.name = name.clone();
-                    state.entries.insert(name, entry);
-                    true
-                } else {
-                    false
-                }
-            }
-            WriteOperation::RemoveEntry { name } => {
-                if let Some(_entry) = state.entries.remove(&name) {
-                    true
-                } else {
-                    false
-                }
-            }
-            WriteOperation::AddTag { name, tag } => {
-                if let Some(entry) = state.entries.get_mut(&name) {
-                    entry.tags.insert(tag)
-                } else {
-                    false
-                }
-            }
-            WriteOperation::RemoveTag { name, tag } => {
-                if let Some(entry) = state.entries.get_mut(&name) {
-                    entry.tags.remove(&tag)
-                } else {
-                    false
-                }
-            }
-            WriteOperation::AddSmallData { data } => {
+            WriteOperation::SmallData { data } => {
                 let hash_ref = HashRef::from_data(&data);
-                if state.data.contains_key(&hash_ref) {
-                    return false;
-                }
 
+                if state.data.contains_key(&hash_ref) {
+                    return true;
+                }
                 state
                     .data
                     .insert(hash_ref, DataSource::Memory(Arc::new(data.into())));
+
                 true
             }
         }
