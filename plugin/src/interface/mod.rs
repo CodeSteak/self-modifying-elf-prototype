@@ -1,103 +1,90 @@
-use crate::data::*;
-use std::sync::*;
+pub mod rw;
+pub use rw::*;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum QueryOperation {
-    And(Vec<QueryOperation>),
-    Or(Vec<QueryOperation>),
-    Not(Box<QueryOperation>),
-    ByName(String),
-    ByTag(Tag),
-    ByTagName(String),
-}
+pub mod core {
+    pub mod entry {
+        use crate::*;
+        use ipc::Channel;
 
-impl QueryOperation {
-    pub fn apply(&self, state: &State) -> Vec<Entry> {
-        let mut result = vec![];
-
-        for (name, entry) in state.entries.iter() {
-            if self.matches((name, entry)) {
-                result.push(entry.clone())
-            }
+        /* "core" "entry" "list" :
+                       -> Vec < Entry >
+        */
+        pub fn list<S: Send + Sized + 'static>(ctx: &Channel<S>) -> Vec<Entry> {
+            ctx.c(("core", "entry", "list"))
+        }
+        /* "core" "entry" "query" : QueryOperation
+                                -> Vec < Entry >
+        */
+        pub fn query<S: Send + Sized + 'static>(
+            ctx: &Channel<S>,
+            q: &QueryOperation,
+        ) -> Vec<Entry> {
+            ctx.c(("core", "entry", "query", q))
+        }
+        /* "core" "entry" "read" : String
+                                -> Option < Entry >
+        */
+        pub fn read<S: Send + Sized + 'static>(ctx: &Channel<S>, s: &str) -> Option<Entry> {
+            ctx.c(("core", "entry", "read", s))
         }
 
-        return result;
-    }
-
-    fn matches(&self, value: (&String, &Entry)) -> bool {
-        match self {
-            QueryOperation::And(sub_ops) => {
-                for op in sub_ops {
-                    if !op.matches(value) {
-                        return false;
-                    }
-                }
-
-                true
-            }
-            QueryOperation::Or(sub_ops) => {
-                for op in sub_ops {
-                    if op.matches(value) {
-                        return true;
-                    }
-                }
-
-                false
-            }
-            QueryOperation::Not(inner) => !inner.matches(value),
-            QueryOperation::ByName(name) => value.0 == name,
-            QueryOperation::ByTag(tag) => value.1.tags.contains(tag),
-            QueryOperation::ByTagName(name) => {
-                value.1.tags.iter().find(|tag| &tag.name == name).is_some()
-            }
+        /* "core" "entry" "write" : WriteOperation
+                        -> bool
+        */
+        pub fn write<S: Send + Sized + 'static>(ctx: &Channel<S>, w: &WriteOperation) -> bool {
+            ctx.c(("core", "entry", "write", w))
         }
     }
-}
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum WriteOperation {
-    Entry {
-        old: Option<String>,
-        new: Option<Entry>,
-    },
-    SmallData {
-        #[serde(with = "serde_bytes")]
-        data: Vec<u8>,
-    },
-}
+    pub mod own_executable {
+        use crate::*;
+        use ipc::Channel;
+        /* "core" "own_executable" "read" :
+                        -> std :: result :: Result < ByteBuf , String >
+        */
+        pub fn read<S: Send + Sized + 'static>(
+            ctx: &Channel<S>,
+        ) -> std::result::Result<ByteBuf, String> {
+            ctx.c(("core", "own_executable", "read"))
+        }
+    }
 
-impl WriteOperation {
-    pub fn apply(self, state: &mut State) -> bool {
-        match self {
-            WriteOperation::Entry { old, new } => {
-                if let Some(new) = &new {
-                    if !state.data.contains_key(&new.data) {
-                        return false;
-                    }
-                }
+    pub mod routes {
+        use ipc::cbor::Value;
+        use ipc::Channel;
 
-                if let Some(old) = old {
-                    state.entries.remove(&old);
-                }
+        /* "core" "routes" "register" : Vec < Value >
+                                -> bool
+        */
+        pub fn register<S: Send + Sized + 'static>(ctx: &Channel<S>, pattern: &Vec<Value>) -> bool {
+            ctx.c(("core", "routes", "register", pattern))
+        }
+        /* "core" "routes" "list" :
+                                -> Vec < Vec < Value > >
+        */
+        pub fn list<S: Send + Sized + 'static>(ctx: &Channel<S>) -> Vec<Vec<Value>> {
+            ctx.c(("core", "routes", "list"))
+        }
+    }
 
-                if let Some(new) = new {
-                    state.entries.insert(new.name.clone(), new);
-                }
+    pub mod hash {
+        use crate::*;
+        use ipc::Channel;
 
-                true
-            }
-            WriteOperation::SmallData { data } => {
-                let hash_ref = HashRef::from_data(&data);
-
-                if state.data.contains_key(&hash_ref) {
-                    return true;
-                }
-                state
-                    .data
-                    .insert(hash_ref, DataSource::Memory(Arc::new(data.into())));
-
-                true
-            }
+        /* "core" "hash" "list" :
+                                -> Vec < HashRef >
+        */
+        pub fn list<S: Send + Sized + 'static>(ctx: &Channel<S>) -> Vec<HashRef> {
+            ctx.c(("core", "hash", "list"))
+        }
+        /* "core" "hash" "read" : HashRef
+                                -> Option < Arc < ByteBuf > >
+        */
+        pub fn read<S: Send + Sized + 'static>(
+            ctx: &Channel<S>,
+            hash: &HashRef,
+        ) -> Option<ByteBuf> {
+            ctx.c(("core", "hash", "read", hash))
         }
     }
 }

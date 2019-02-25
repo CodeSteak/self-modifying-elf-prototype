@@ -1,8 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
 
-#[macro_use]
-extern crate microwiki_derive;
 extern crate ipc;
 extern crate nix;
 extern crate notify;
@@ -20,8 +18,11 @@ pub mod prelude;
 pub mod runner;
 pub mod util;
 
-lazy_static! {
-    pub static ref ROUTING_TABLE: Arc<Mutex<Router<PluginInfo>>> = { Default::default() };
+#[context]
+#[derive(Clone, Default)]
+pub struct Context {
+    pub plugin_info: Option<PluginInfo>,
+    pub global_routes: Arc<Mutex<Router<Context>>>,
 }
 
 lazy_static! {
@@ -37,28 +38,37 @@ lazy_static! {
 }
 
 fn main() {
+    //print!("{}", Context::routing_info());
+
+    let context = Context {
+        plugin_info: None,
+        global_routes: Arc::new(Mutex::new(Context::default_router())),
+    };
+
     if let Ok(dir) = std::env::var("OVERLAY") {
-        overlay_main(dir);
+        overlay_main(context, dir);
     } else {
-        normal_main();
+        normal_main(context);
     }
 }
 
-fn normal_main() {
+fn normal_main(context: Context) {
     let cmd = std::env::args().nth(1).expect("1 Argument needed");
 
     let q = QueryOperation::And(vec![
         QueryOperation::ByTag(prelude::Tag::new("command", cmd.as_str())),
         QueryOperation::ByTag(prelude::Tag::new("type", "ELF")),
     ]);
-    let entities = crate::core::entry::query((q,)).unwrap();
+    let entities = crate::core::entry::query((), q);
     let ent = entities.get(0).expect("Command Not Found!");
 
     let args = std::env::args().skip(1).collect::<Vec<String>>();
-    runner::start_plugin_by_entry(ent, &args).unwrap().wait();
+    runner::start_plugin_by_entry(&context, ent, &args)
+        .unwrap()
+        .wait();
 }
 
-fn overlay_main(dir: String) {
+fn overlay_main(context: Context, dir: String) {
     use notify::{RecommendedWatcher, RecursiveMode, Watcher};
     use std::sync::mpsc::channel;
     use std::time::*;
@@ -88,12 +98,12 @@ fn overlay_main(dir: String) {
             QueryOperation::ByTag(prelude::Tag::new("type", "ELF")),
         ]);
 
-        let entities = crate::core::entry::query((q,)).unwrap();
+        let entities = crate::core::entry::query((), q);
         let ent = entities.get(0).expect("Command Not Found!");
 
         let args = std::env::args().skip(1).collect::<Vec<String>>();
 
-        let pid = runner::start_plugin_by_entry(ent, &args).unwrap();
+        let pid = runner::start_plugin_by_entry(&context, ent, &args).unwrap();
 
         use nix::sys::signal::*;
         let handler = SigHandler::Handler(die_on_signal);

@@ -5,7 +5,6 @@ authors = ["CodeSteak <codesteak@shellf.art>"]
 edition = "2018"
 
 [dependencies]
-microwiki_derive = {path = "./microwiki_derive"}
 ipc = {path = "./ipc"}
 lazy_static = "1.2.0"
 nix = "0.13"

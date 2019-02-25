@@ -18,21 +18,19 @@ pub(crate) fn register_upload(r: &mut Resource<AppState>) {
 
 fn entry_delete(req: &HttpRequest<AppState>) -> HttpResponse {
     (|| {
-        let ctx = req.state().ctx.clone();
+        let ctx = &req.state().ctx;
 
         let name: String = req.match_info().get("name").and_then(url_decode)?;
 
-        let b: Option<bool> = ctx.call(&(
-            "core",
-            "entry",
-            "write",
-            WriteOperation::Entry {
+        let b = core::entry::write(
+            &ctx,
+            &WriteOperation::Entry {
                 old: Some(name.clone()),
                 new: None,
             },
-        ));
+        );
 
-        if let Some(true) = b {
+        if b {
             Some(HttpResponse::Ok().json(b))
         } else {
             Some(HttpResponse::NotFound().json(b))
@@ -47,20 +45,13 @@ fn entry(req: &HttpRequest<AppState>) -> HttpResponse {
 
 fn entry_html(req: &HttpRequest<AppState>) -> HttpResponse {
     (|| {
-        let ctx = req.state().ctx.clone();
+        let ctx = &req.state().ctx;
         let p: String = req.match_info().get("name").and_then(url_decode)?;
-        let item: Entry = ctx
-            .call::<_, Vec<Entry>>(&(
-                "core",
-                "entry",
-                "query",
-                QueryOperation::ByName(p.to_string()),
-            ))?
-            .into_iter()
-            .next()?;
+
+        let item: Entry = core::entry::read(&ctx, &p)?;
 
         let get_data /*: FnOnce() -> Option<Vec<u8>>*/ = || {
-            let vec : Vec<u8> = (ctx.call::<_,ByteBuf>(&("core","hash","read",&item.data)) as Option<ByteBuf>)?.into();
+            let vec : Vec<u8> =core::hash::read(&ctx,&item.data)?.into();
             Some(vec)
         };
 
@@ -89,7 +80,7 @@ fn entry_html(req: &HttpRequest<AppState>) -> HttpResponse {
                         .content_type("text/html; charset=utf-8")
                         .body(data),
                 )
-            },
+            }
             Some("js") => {
                 let data = get_data()?;
 
@@ -98,7 +89,7 @@ fn entry_html(req: &HttpRequest<AppState>) -> HttpResponse {
                         .content_type("text/javascript; charset=utf-8")
                         .body(data),
                 )
-            },
+            }
             Some("css") => {
                 let data = get_data()?;
 
@@ -160,13 +151,11 @@ struct EntryUpload {
 }
 
 fn entry_upload((data, req): (Json<EntryUpload>, HttpRequest<AppState>)) -> HttpResponse {
-    let ctx = req.state().ctx.clone();
+    let ctx = &req.state().ctx;
 
-    let b: Option<bool> = ctx.call(&(
-        "core",
-        "entry",
-        "write",
-        WriteOperation::Entry {
+    let b = core::entry::write(
+        &ctx,
+        &WriteOperation::Entry {
             old: data.old_name.clone(),
             new: Some(Entry {
                 name: data.name.clone(),
@@ -184,9 +173,9 @@ fn entry_upload((data, req): (Json<EntryUpload>, HttpRequest<AppState>)) -> Http
                     .collect(),
             }),
         },
-    ));
+    );
 
-    if let Some(true) = b {
+    if b {
         HttpResponse::Ok().json(b)
     } else {
         HttpResponse::BadRequest().json(b)

@@ -1,5 +1,5 @@
 [package]
-name = "microwiki_derive"
+name = "ipc_derive"
 version = "0.1.0"
 authors = ["CodeSteak <codesteak@shellf.art>"]
 edition = "2018"

@@ -20,17 +20,17 @@ pub struct OwnExecutable {
     unread: bool,
 }
 
-#[service(("core","file","write"))]
-pub fn write((op,): (WriteOperation,)) -> Option<bool> {
-    Some(DATA.lock().unwrap().write(&op).is_ok())
+//#[service("core","file","write")]
+pub fn write(_ctx: (), op: WriteOperation) -> bool {
+    DATA.lock().unwrap().write(&op).is_ok()
 }
 
-#[service(("core","own_executable","read"))]
-pub fn read_binary(_: Vec<()>) -> Option<ByteBuf> {
-    read_binary_inner().ok()
+#[service("core", "own_executable", "read")]
+pub fn read_binary(_ctx: ()) -> std::result::Result<ByteBuf, String> {
+    read_binary_inner()
 }
 
-fn read_binary_inner() -> Result<ByteBuf> {
+fn read_binary_inner() -> std::result::Result<ByteBuf, String> {
     let mut file =
         File::open(std::env::args().nth(0).unwrap()).expect("Unable to read own Executable!");
 
@@ -39,19 +39,19 @@ fn read_binary_inner() -> Result<ByteBuf> {
     if let Ok(size) = offset {
         let size: usize = size.parse().expect("Invalid SELF_OFFSET env var.");
         let mut vec = vec![0u8; size];
-        let len = file.read(&mut vec[..])?;
+        let len = file.read(&mut vec[..]).map_err(|e| format!("{:?}", e))?;
 
         if len != size as usize {
-            return Err(Error::new(
-                ErrorKind::UnexpectedEof,
-                "Could not read full binary.",
+            return Err(format!(
+                "{:?}",
+                Error::new(ErrorKind::UnexpectedEof, "Could not read full binary.",)
             ));
         }
 
         Ok(vec.into())
     } else {
         let mut vec = vec![];
-        let _len = file.read_to_end(&mut vec)?;
+        let _len = file.read_to_end(&mut vec).map_err(|e| format!("{:?}", e))?;
 
         Ok(vec.into())
     }

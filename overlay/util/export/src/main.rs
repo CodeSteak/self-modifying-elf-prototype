@@ -25,7 +25,7 @@ struct Export {
 
 fn main() -> std::io::Result<()> {
     let args: Export = StructOpt::from_args();
-    let ctx: Channel = Channel::new_from_env();
+    let ctx: Channel = Channel::new_from_env(());
 
     use std::fs::*;
     use std::io::*;
@@ -42,7 +42,7 @@ fn main() -> std::io::Result<()> {
     let mut file = fop.open(args.file.unwrap_or(PathBuf::from("-")))?;
 
     if !args.exclude_binary {
-        let bin: Option<ByteBuf> = ctx.call(&("core", "own_executable", "read"));
+        let bin: Option<ByteBuf> = core::own_executable::read(&ctx).ok();
 
         let bytes = bin.ok_or(Error::new(
             ErrorKind::NotFound,
@@ -52,19 +52,15 @@ fn main() -> std::io::Result<()> {
         file.write_all(bytes.as_ref())?;
     }
 
-    let res = ctx
-        .call::<_, Vec<Entry>>(&("core", "entry", "list"))
-        .ok_or(Error::new(ErrorKind::NotFound, "Unable to read entries."))?;
+    let res = core::entry::list(&ctx);
 
     for e in res {
         println!("\t\t\t + {}", &e.name);
 
-        let data = ctx
-            .call::<_, ByteBuf>(&("core", "hash", "read", &e.data))
-            .ok_or(Error::new(
-                ErrorKind::NotFound,
-                "Unable to read data from entity.",
-            ))?;;
+        let data = core::hash::read(&ctx, &e.data).ok_or(Error::new(
+            ErrorKind::NotFound,
+            "Unable to read data from entity.",
+        ))?;;
 
         let wr_op = WriteOperation::SmallData { data: data.into() };
         cbor::to_writer(&mut file, &wr_op)

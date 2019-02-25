@@ -7,4 +7,7 @@ edition = "2018"
 [dependencies]
 bufstream = "0.1"
 serde = { version = "1.0"}
-serde_cbor = "0.9.0"
+# Current Version does not serialize Result!
+# Need version later than 0.9.0
+serde_cbor = {git= "https://github.com/pyfisch/cbor", rev = "114ecae"}
+ipc_derive = {path = "./ipc_derive"}

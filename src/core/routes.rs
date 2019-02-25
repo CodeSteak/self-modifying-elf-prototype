@@ -1,20 +1,24 @@
 use crate::prelude::*;
+use crate::runner::PluginInfo;
 
-#[service_state(("core", "routes", "register", Value::Null))]
-fn register_fn(info: &mut PluginInfo, route: (Vec<Value>,)) -> Option<bool> {
-    let mut rout = ROUTING_TABLE.lock().unwrap();
+#[service("core", "routes", "register")]
+fn register_fn(ctx: &mut Context, route: Vec<Value>) -> bool {
+    let mut rout = ctx.global_routes.lock().unwrap();
 
     rout.register(Box::new(RedirectHandler {
-        path: route.0,
-        info: info.clone(),
+        path: route,
+        info: ctx
+            .plugin_info
+            .clone()
+            .expect("Only plugins can call this."),
     }));
 
-    Some(true)
+    true
 }
 
-#[service(("core", "routes", "list"))]
-fn list_fn(_no_args: Vec<()>) -> Option<Vec<Vec<Value>>> {
-    let rout = ROUTING_TABLE.lock().unwrap();
+#[service("core", "routes", "list")]
+fn list_fn(ctx: &mut Context) -> Vec<Vec<Value>> {
+    let rout = ctx.global_routes.lock().unwrap();
 
     let ret = rout
         .paths
@@ -22,7 +26,7 @@ fn list_fn(_no_args: Vec<()>) -> Option<Vec<Vec<Value>>> {
         .map(|(r, _)| r.clone())
         .collect::<Vec<_>>();
 
-    Some(ret)
+    ret
 }
 
 struct RedirectHandler {
@@ -35,7 +39,7 @@ impl<S: Send + Sized> Handler<S> for RedirectHandler {
         self.path.clone()
     }
     fn handle(&self, arg: &[&Value]) -> Option<Value> {
-        let mut out = self.info.call_channel.as_ref().unwrap().lock().unwrap();
+        let mut out = self.info.call_channel.as_ref().lock().unwrap();
 
         let mut path_with_args: Vec<&Value> = vec![];
 

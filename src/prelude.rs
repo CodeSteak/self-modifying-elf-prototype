@@ -1,7 +1,6 @@
-pub use crate::PluginInfo;
+pub use crate::Context;
 
 pub use crate::GLOBAL_STATE;
-pub use crate::ROUTING_TABLE;
 
 pub use ipc::cbor::Value;
 pub use ipc::*;

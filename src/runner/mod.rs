@@ -5,15 +5,16 @@ use plugin::*;
 use std::os::unix::io::AsRawFd;
 use std::os::unix::net::UnixStream;
 
-use crate::ROUTING_TABLE;
+use crate::Context;
 
 use std::sync::*;
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct PluginInfo {
-    pub call_channel: Option<Arc<Mutex<BufStream<UnixStream>>>>,
+    pub call_channel: Arc<Mutex<BufStream<UnixStream>>>,
 }
 
+/*
 pub fn run_async<F: FnOnce(Channel) + Send + Sized + 'static>(f: F) -> PluginInfo {
     run_blocking(|ch| {
         use std::thread;
@@ -42,7 +43,9 @@ pub fn run_blocking<F: FnOnce(Channel) + Sized + 'static>(f: F) -> PluginInfo {
 
     info
 }
+*/
 
+/*
 pub fn start_plugin_via_cargo(sub_dir: &str, args: &[String]) {
     // p2h: Plugin to Host.
     // h2p: Host to Plugin.
@@ -75,6 +78,7 @@ pub fn start_plugin_via_cargo(sub_dir: &str, args: &[String]) {
 
     cmd.wait().expect("failed to wait on child");
 }
+*/
 
 pub struct ChildPid {
     pid: nix::unistd::Pid,
@@ -94,11 +98,17 @@ impl ChildPid {
     }
 }
 
-pub fn start_plugin_by_entry(entry: &Entry, args: &[String]) -> Option<ChildPid> {
-    let data = crate::core::hash::read((entry.data.clone(),))?;
+pub fn start_plugin_by_entry(
+    context: &Context,
+    entry: &Entry,
+    args: &[String],
+) -> Option<ChildPid> {
+    let data = crate::core::hash::read((), entry.data.clone())?;
     use nix::sys::memfd::*;
     use nix::unistd::*;
     use std::ffi::*;
+
+    let mut context = context.clone();
 
     let mem_fd_name = CString::new("mcwk-srv").unwrap();
     let mem_fd = memfd_create(
@@ -124,10 +134,12 @@ pub fn start_plugin_by_entry(entry: &Entry, args: &[String]) -> Option<ChildPid>
     let h2p_host = Arc::new(Mutex::new(BufStream::new(h2p_host)));
 
     let info = PluginInfo {
-        call_channel: Some(h2p_host.clone()),
+        call_channel: h2p_host.clone(),
     };
 
-    Channel::new_full((p2h_host, h2p_host), ROUTING_TABLE.clone(), info.clone());
+    context.plugin_info = Some(info);
+
+    Channel::new_as_host((p2h_host, h2p_host), context.global_routes.clone(), context);
 
     set_no_close_exec(&p2h_plugin);
     set_no_close_exec(&h2p_plugin);

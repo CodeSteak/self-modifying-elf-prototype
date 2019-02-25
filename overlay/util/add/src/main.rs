@@ -34,7 +34,7 @@ enum Add {
 fn main() {
     let args: Add = StructOpt::from_args();
 
-    let ctx: Channel = Channel::new_from_env();
+    let ctx = Channel::new_from_env(());
 
     match args {
         Add::KV { name, data } => {
@@ -76,42 +76,38 @@ fn main() {
 fn add_data(ctx: &Channel, name: &str, data: Vec<u8>) {
     let hash_ref = HashRef::from_data(&data);
 
-    let v: Option<Value> =
-        ctx.call(&("core", "entry", "write", WriteOperation::SmallData { data }));
-    dbg!(v.unwrap());
-
-    let v: Option<Value> = ctx.call(&(
-        "core",
-        "entry",
-        "write",
-        WriteOperation::Entry {
-            old: None,
-            new: Some(Entry {
-                name: name.to_owned(),
-                data: hash_ref,
-                tags: Default::default(),
-            }),
-        },
-    ));
-    dbg!(v.unwrap());
+    assert_eq!(
+        core::entry::write(&ctx, &WriteOperation::SmallData { data }),
+        true
+    );
+    assert_eq!(
+        core::entry::write(
+            &ctx,
+            &WriteOperation::Entry {
+                old: None,
+                new: Some(Entry {
+                    name: name.to_owned(),
+                    data: hash_ref,
+                    tags: Default::default(),
+                }),
+            }
+        ),
+        true
+    );
 }
 
 fn add_tag(ctx: &Channel, name: &str, tag: &str, tag_value: Option<&str>) {
-    let mut new: Entry = ctx
-        .call(&("core", "entry", "read", name))
-        .expect("Didn't find entry!");
+    let mut new: Entry = core::entry::read(ctx, name).expect("Didn't find entry!");
 
     new.tags.insert(Tag::new(tag, tag_value));
-
-    let v: Option<Value> = ctx.call(&(
-        "core",
-        "entry",
-        "write",
-        WriteOperation::Entry {
-            old: None,
-            new: Some(new),
-        },
-    ));
-
-    dbg!(v.unwrap());
+    assert_eq!(
+        core::entry::write(
+            &ctx,
+            &WriteOperation::Entry {
+                old: None,
+                new: Some(new),
+            }
+        ),
+        true
+    );
 }

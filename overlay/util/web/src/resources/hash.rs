@@ -16,10 +16,10 @@ pub(crate) fn register_upload(r: &mut Resource<AppState>) {
 }
 
 fn hash(req: &HttpRequest<AppState>) -> Option<HttpResponse> {
-    let ctx = req.state().ctx.clone();
+    let ctx = &req.state().ctx;
     let hash: HashRef = req.match_info().get("hash")?.parse::<HashRef>().ok()?;
 
-    let data = ctx.call::<_, ByteBuf>(&("core", "hash", "read", &hash));
+    let data = core::hash::read(&ctx, &hash);
 
     if let Some(data) = data {
         let vec: Vec<u8> = data.into();

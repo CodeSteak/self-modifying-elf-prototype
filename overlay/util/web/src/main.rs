@@ -11,7 +11,7 @@ mod util;
 use util::*;
 
 fn main() {
-    let ch: Channel = Channel::new_from_env();
+    let ch: Channel = Channel::new_from_env(());
 
     let sys = actix::System::new("sys");
 

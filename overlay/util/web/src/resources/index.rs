@@ -6,13 +6,9 @@ pub(crate) fn register(r: &mut Resource<AppState>) {
 }
 
 fn index(req: &HttpRequest<AppState>) -> HttpResponse {
-    let ctx = req.state().ctx.clone();
+    let ctx = &req.state().ctx;
 
-    println!("{:#?}", req);
-
-    let res = ctx
-        .call::<_, Vec<Entry>>(&("core", "entry", "list"))
-        .unwrap_or_else(|| vec![]);
+    let res = core::entry::list(&ctx);
 
     match req
         .headers()
