@@ -24,7 +24,7 @@ fn entry_delete(req: &HttpRequest<AppState>) -> HttpResponse {
 
         let b = core::entry::write(
             &ctx,
-            &WriteOperation::Entry {
+            &WriteEntry {
                 old: Some(name.clone()),
                 new: None,
             },
@@ -155,7 +155,7 @@ fn entry_upload((data, req): (Json<EntryUpload>, HttpRequest<AppState>)) -> Http
 
     let b = core::entry::write(
         &ctx,
-        &WriteOperation::Entry {
+        &WriteEntry {
             old: data.old_name.clone(),
             new: Some(Entry {
                 name: data.name.clone(),

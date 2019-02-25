@@ -65,14 +65,6 @@ impl<R> CallResponse<R> {
 }
 
 impl<State: Send + Sized + 'static> Channel<State> {
-    /* pub fn new((i, o): (UnixStream, UnixStream)) -> Self
-    where
-        State: Default,
-    {
-        let o = Arc::new(Mutex::new(BufStream::new(o)));
-        Self::new_full((i, o), Default::default(), Default::default())
-    }*/
-
     pub fn new_as_host(
         (incoming, outgoing): (UnixStream, Arc<Mutex<BufStream<UnixStream>>>),
         routes: Arc<Mutex<Router<State>>>,
@@ -145,62 +137,10 @@ impl<State: Send + Sized + 'static> Channel<State> {
         Self::new_as_host((h2p_sock, p2h_sock), router, state)
     }
 
-    /*fn register(&mut self, handler: Box<dyn Handler<State>>) -> bool {
-        let res: bool = self
-            .call(("core", "routes", "register", &handler.path()))
-            .unwrap_or(false).unwrap();
-
-        if res {
-            self.routes.lock().unwrap().register(handler);
-        }
-
-        res
-    }*/
-
     fn call<S: Serialize, R: DeserializeOwned>(&self, data: S) -> CallResponse<R> {
         let mut out = self.outgoing.lock().unwrap();
         let _ = serde_cbor::to_writer(&mut *out, &data).unwrap();
         out.flush().unwrap();
-        /*let v = cbor::from_stream_reader::<cbor::Value, _>(&mut *out).unwrap();
-        dbg!(&v);
-        match v {
-            cbor::Value::Array(arr) => {
-                let data : std::result::Result<cbor::Value,String> = Ok(cbor::Value::Bytes(vec![127,
-                                                                                                69,
-                                                                                                76,
-                                                                                                70,
-                                                                                                2,
-                                                                                                1,
-                                                                                                1,
-                                                                                                0,
-                                                                                                0,
-                                                                                                0,
-                                                                                                0,
-                                                                                                0,
-                                                                                                0,
-                                                                                                0,
-                                                                                                0,
-                                                                                                0,
-                                                                                                3,
-                                                                                                0,
-                                                                                                62,
-                                                                                                0
-                ]));
-                let cmp = cbor::to_value(data).unwrap();
-                dbg!(&cmp == &arr[1]);
-                dbg!(&cmp);
-                dbg!(&arr[1]);
-
-                let me : std::result::Result<cbor::Value,String> = cbor::from_value(cmp).expect("A");
-                return CallResponse::Some(cbor::from_value(arr[1].clone()).expect("B"));
-            },
-            _ => {
-                unreachable!()
-            }
-        }*/
-        //dbg!(&v);
-
-        //cbor::from_value(v).unwrap()
         cbor::from_stream_reader::<CallResponse<R>, _>(&mut *out).unwrap()
     }
 

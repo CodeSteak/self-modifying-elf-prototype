@@ -55,21 +55,27 @@ impl QueryOperation {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct WriteEntry {
+    pub old: Option<String>,
+    pub new: Option<Entry>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct WriteSmallData {
+    #[serde(with = "serde_bytes")]
+    pub data: Vec<u8>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum WriteOperation {
-    Entry {
-        old: Option<String>,
-        new: Option<Entry>,
-    },
-    SmallData {
-        #[serde(with = "serde_bytes")]
-        data: Vec<u8>,
-    },
+    Entry(WriteEntry),
+    SmallData(WriteSmallData),
 }
 
 impl WriteOperation {
     pub fn apply(self, state: &mut State) -> bool {
         match self {
-            WriteOperation::Entry { old, new } => {
+            WriteOperation::Entry(WriteEntry { old, new }) => {
                 if let Some(new) = &new {
                     if !state.data.contains_key(&new.data) {
                         return false;
@@ -86,7 +92,7 @@ impl WriteOperation {
 
                 true
             }
-            WriteOperation::SmallData { data } => {
+            WriteOperation::SmallData(WriteSmallData {data}) => {
                 let hash_ref = HashRef::from_data(&data);
 
                 if state.data.contains_key(&hash_ref) {

@@ -31,7 +31,7 @@ pub mod core {
         /* "core" "entry" "write" : WriteOperation
                         -> bool
         */
-        pub fn write<S: Send + Sized + 'static>(ctx: &Channel<S>, w: &WriteOperation) -> bool {
+        pub fn write<S: Send + Sized + 'static>(ctx: &Channel<S>, w: &WriteEntry) -> bool {
             ctx.c(("core", "entry", "write", w))
         }
     }
@@ -85,6 +85,13 @@ pub mod core {
             hash: &HashRef,
         ) -> Option<ByteBuf> {
             ctx.c(("core", "hash", "read", hash))
+        }
+
+        /* "core" "hash" "write" : WriteSmallData
+                      -> bool
+      */
+        pub fn write<S: Send + Sized + 'static>(ctx: &Channel<S>, w: &WriteSmallData) -> bool {
+            ctx.c(("core", "hash", "write", w))
         }
     }
 }

@@ -19,7 +19,8 @@ pub fn read(_ctx: (), s: String) -> Option<Entry> {
 }
 
 #[service("core", "entry", "write")]
-pub fn write(_ctx: (), op: WriteOperation) -> bool {
+pub fn write(_ctx: (), op: WriteEntry) -> bool {
+    let op = WriteOperation::Entry(op);
     let mut state = GLOBAL_STATE.write().unwrap();
 
     let change = op.clone().apply(&mut *state);

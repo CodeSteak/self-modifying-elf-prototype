@@ -17,3 +17,18 @@ pub fn read(_ctx: (), h: HashRef) -> Option<Arc<ByteBuf>> {
         _ => unimplemented!(),
     }
 }
+
+#[service("core", "hash", "write")]
+pub fn write(_ctx: (), op: WriteSmallData) -> bool {
+    let op = WriteOperation::SmallData(op);
+    let mut state = GLOBAL_STATE.write().unwrap();
+
+    let change = op.clone().apply(&mut *state);
+    if change {
+        if !crate::core::file::write((), op.clone()) {
+            panic!("Failed writing data!");
+        }
+    }
+
+    change
+}

@@ -77,13 +77,13 @@ fn add_data(ctx: &Channel, name: &str, data: Vec<u8>) {
     let hash_ref = HashRef::from_data(&data);
 
     assert_eq!(
-        core::entry::write(&ctx, &WriteOperation::SmallData { data }),
+        core::hash::write(&ctx, &WriteSmallData { data }),
         true
     );
     assert_eq!(
         core::entry::write(
             &ctx,
-            &WriteOperation::Entry {
+            &WriteEntry {
                 old: None,
                 new: Some(Entry {
                     name: name.to_owned(),
@@ -103,7 +103,7 @@ fn add_tag(ctx: &Channel, name: &str, tag: &str, tag_value: Option<&str>) {
     assert_eq!(
         core::entry::write(
             &ctx,
-            &WriteOperation::Entry {
+            &WriteEntry {
                 old: None,
                 new: Some(new),
             }
