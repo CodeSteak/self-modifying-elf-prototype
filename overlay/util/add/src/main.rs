@@ -76,10 +76,7 @@ fn main() {
 fn add_data(ctx: &Channel, name: &str, data: Vec<u8>) {
     let hash_ref = HashRef::from_data(&data);
 
-    assert_eq!(
-        core::hash::write(&ctx, &WriteSmallData { data }),
-        true
-    );
+    assert_eq!(core::hash::write(&ctx, &WriteSmallData { data }), true);
     assert_eq!(
         core::entry::write(
             &ctx,

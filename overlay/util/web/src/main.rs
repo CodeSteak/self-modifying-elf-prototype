@@ -4,6 +4,7 @@ extern crate plugin;
 extern crate actix_web;
 extern crate serde;
 extern crate serde_json;
+extern crate syntect;
 
 mod resources;
 mod util;

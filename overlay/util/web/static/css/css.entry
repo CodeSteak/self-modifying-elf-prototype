@@ -1,0 +1,4 @@
+web-ui/main.css
+    type css
+    web-ui/style
+#include main.css

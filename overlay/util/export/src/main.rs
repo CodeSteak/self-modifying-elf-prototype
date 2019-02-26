@@ -62,7 +62,7 @@ fn main() -> std::io::Result<()> {
             "Unable to read data from entity.",
         ))?;;
 
-        let wr_op = WriteOperation::SmallData(WriteSmallData{ data: data.into() });
+        let wr_op = WriteOperation::SmallData(WriteSmallData { data: data.into() });
         cbor::to_writer(&mut file, &wr_op)
             .map_err(|_| Error::new(ErrorKind::Other, "Couldn't write data."))?;
 

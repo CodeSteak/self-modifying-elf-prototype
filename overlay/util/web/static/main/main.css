@@ -1,0 +1,56 @@
+body {
+    margin: 0em;
+    display: grid;
+    grid-template-areas:
+      "head head"
+      " nav cont"
+      "foot foot";
+
+    grid-template-columns: minmax(3em, auto) 1fr;
+    grid-template-rows: auto;
+
+    font-family: 'Fira Sans', sans-serif;
+    font-weight: normal;
+    line-height: 125%;
+    color: dimgrey;
+}
+
+h1 {
+    color: darkslategrey;
+}
+
+pre {
+    font-family: 'Fira Mono', monospace;
+    font-weight: 450;
+}
+
+.line-number {
+    color: dimgrey;
+}
+
+nav {
+    grid-area: nav;
+}
+
+main {
+    grid-area: cont;
+    margin: 1em;
+}
+
+main > section {
+    max-width: 60em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+main > section + section::before {
+   content: "";
+   width: 80%;
+   display: block;
+   height: 1px;
+   background-color: darkslategrey;
+   margin-top: 3em;
+   margin-bottom: 3em;
+   margin-left: auto;
+   margin-right: auto;
+}

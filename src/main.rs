@@ -68,15 +68,34 @@ fn normal_main(context: Context) {
         .wait();
 }
 
-fn overlay_main(context: Context, dir: String) {
+fn overlay_main(context: Context, mut dir: String) {
     use notify::{RecommendedWatcher, RecursiveMode, Watcher};
     use std::sync::mpsc::channel;
     use std::time::*;
 
     let (tx, rx) = channel();
+    // Lifetime stuff
+    let mut _tx_deamon: Option<mpsc::Sender<_>> = None;
+    let mut _watcher_deamon: Option<RecommendedWatcher> = None;
 
-    let mut watcher: RecommendedWatcher = Watcher::new_raw(tx).unwrap();
-    watcher.watch(&dir, RecursiveMode::Recursive).unwrap();
+    if let Ok(new_dir) = std::env::var("OVERLAY_WATCH") {
+        println!("Using Overlay Watch...");
+        println!("Load initial Overlay...");
+        match util::directory_overlay::apply(&mut *(GLOBAL_STATE.write().unwrap()), &dir) {
+            Ok(_) => (),
+            Err(e) => {
+                eprintln!("{:?}", e);
+                std::process::exit(1);
+            }
+        };
+        println!("Looping...");
+        let mut watcher: RecommendedWatcher = Watcher::new_raw(tx).unwrap();
+        watcher.watch(&new_dir, RecursiveMode::Recursive).unwrap();
+        dir = new_dir;
+        _watcher_deamon = Some(watcher);
+    } else {
+        _tx_deamon = Some(tx);
+    }
 
     let cmd = std::env::args().nth(1).expect("1 Argument needed");
 

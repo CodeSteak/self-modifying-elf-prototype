@@ -92,7 +92,7 @@ impl WriteOperation {
 
                 true
             }
-            WriteOperation::SmallData(WriteSmallData {data}) => {
+            WriteOperation::SmallData(WriteSmallData { data }) => {
                 let hash_ref = HashRef::from_data(&data);
 
                 if state.data.contains_key(&hash_ref) {

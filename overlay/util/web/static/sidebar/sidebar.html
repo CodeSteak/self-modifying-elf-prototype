@@ -1,0 +1,9 @@
+<nav>
+  <input placeholder="⌕" id="sidebar-search" oninput="render_sidebar_search('sidebar-content', this.value);"/>
+  <ul id="sidebar-content"></ul>
+  <script type="text/javascript">
+    window.addEventListener('load', () => {
+        render_sidebar_search('sidebar-content', document.getElementById('sidebar-search').value);
+    })
+  </script>
+</nav>

@@ -1,0 +1,14 @@
+web-ui/sidebar/sidebar.html
+    type html
+    web-ui/html-header
+#include sidebar.html
+
+web-ui/sidebar/sidebar.css
+    type css
+    web-ui/style
+#include sidebar.css
+
+web-ui/sidebar/sidebar.js
+    type js
+    web-ui/script
+#include sidebar.js

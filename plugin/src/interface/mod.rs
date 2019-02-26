@@ -88,8 +88,8 @@ pub mod core {
         }
 
         /* "core" "hash" "write" : WriteSmallData
-                      -> bool
-      */
+                        -> bool
+        */
         pub fn write<S: Send + Sized + 'static>(ctx: &Channel<S>, w: &WriteSmallData) -> bool {
             ctx.c(("core", "hash", "write", w))
         }
