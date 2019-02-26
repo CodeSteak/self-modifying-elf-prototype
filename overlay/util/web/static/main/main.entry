@@ -1,14 +1,14 @@
 web-ui/main/data.js
     type js
-    web-ui/script
+    --web-ui/script
 #include data.js
 
 web-ui/main/append_entry.js
     type js
-    web-ui/script
+    --web-ui/script
 #include append_entry.js
 
 web-ui/main/main.css
     type css
-    web-ui/style
+    --web-ui/style
 #include main.css

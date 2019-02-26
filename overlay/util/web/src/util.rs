@@ -31,14 +31,10 @@ pub(crate) fn html_encode(s: &str) -> String {
 
     for b in s.chars() {
         match b {
-            ' ' => result.push(b),
-            '\t' => result.push(b),
+            ' ' | '\t' | '\n' => result.push(b),
             '0'..='9' => result.push(b),
             'a'..='z' => result.push(b),
             'A'..='Z' => result.push(b),
-            '\n' => {
-                result += &format!("<br/>");
-            }
             _ => {
                 result += &format!("&#x{:04X};", b as u32);
             }

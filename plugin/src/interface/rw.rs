@@ -9,6 +9,8 @@ pub enum QueryOperation {
     ByName(String),
     ByTag(Tag),
     ByTagName(String),
+    HasInName(String),
+    HasInTagName(String),
 }
 
 impl QueryOperation {
@@ -50,6 +52,15 @@ impl QueryOperation {
             QueryOperation::ByTagName(name) => {
                 value.1.tags.iter().find(|tag| &tag.name == name).is_some()
             }
+            QueryOperation::HasInName(pattern) => {
+                value.0.to_lowercase().contains(&pattern.to_lowercase())
+            }
+            QueryOperation::HasInTagName(pattern) => value
+                .1
+                .tags
+                .iter()
+                .find(|tag| tag.name.to_lowercase().contains(&pattern.to_lowercase()))
+                .is_some(),
         }
     }
 }
@@ -76,17 +87,25 @@ impl WriteOperation {
     pub fn apply(self, state: &mut State) -> bool {
         match self {
             WriteOperation::Entry(WriteEntry { old, new }) => {
+                // Ensure Hash is stored.
                 if let Some(new) = &new {
                     if !state.data.contains_key(&new.data) {
                         return false;
                     }
                 }
 
+                // Remove Old
                 if let Some(old) = old {
                     state.entries.remove(&old);
                 }
 
                 if let Some(new) = new {
+                    // Fail if already exits, to prevent
+                    // overwriting by accident.
+                    if state.entries.contains_key(&new.name) {
+                        return false; //Fail
+                    }
+
                     state.entries.insert(new.name.clone(), new);
                 }
 

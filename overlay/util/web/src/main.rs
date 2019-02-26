@@ -28,7 +28,7 @@ fn main() {
                 resources::hash_ext,
             )
             .resource("/entry/{name:.+}", resources::entry)
-            .resource("/entry/", resources::entry_upload)
+            .resource("/entry/", resources::entry_root)
             //.handler("/static", fs::StaticFiles::new("./static").unwrap())
             .default_resource(|r| {
                 r.f(|_| HttpResponse::NotFound().body("<h1>404</h1><h3>Not found!</h3>"))
