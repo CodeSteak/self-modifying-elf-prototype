@@ -24,7 +24,7 @@ mkdir -p out
 	cat out/payload >> out/loader.a
 	
 # build microwiki via loader.a
-	OVERLAY="./overlay" USE_UPX=1 USE_STRIP=1 out/loader.a export -o out/microwiki
+	OVERLAY="." USE_UPX=1 USE_STRIP=1 out/loader.a export -o out/microwiki
 	chmod +x out/microwiki
 	
 # "Voila"

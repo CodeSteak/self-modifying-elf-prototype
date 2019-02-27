@@ -1,20 +1,18 @@
-[package]
-name = "microwiki"
-version = "0.1.0"
-authors = ["CodeSteak <codesteak@shellf.art>"]
-edition = "2018"
+[workspace]
+members = [
+    "microwiki",
+    
+    "plugin",
+    "ipc",
 
-[dependencies]
-ipc = {path = "./ipc"}
-lazy_static = "1.2.0"
-nix = "0.13"
-serde = { version = "1.0", features = ["derive", "rc"] }
-blake2-rfc = "0.2.18"
-plugin = {path = "./plugin"}
-notify = "4.0.0"
+    "command_web",
+    "command_add",
+    "command_export",
+]
 
 [profile.release]
 opt-level = 'z'
 lto = true
 codegen-units = 1
 panic = 'abort'
+incremental = false

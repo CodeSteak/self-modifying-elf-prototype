@@ -7,17 +7,33 @@ use std::path::*;
 use std::sync::*;
 
 pub fn apply<P: Into<PathBuf>>(state: &mut State, path: P) -> Result<()> {
+    walk_dir(path, |entry| {
+        if entry.extension().and_then(|s| s.to_str()) == Some("entry") {
+            println!("Loading {:?}", entry);
+            parse_entry_file(state, entry)?;
+        }
+
+        Ok(())
+    })?;
+
+    println!("Done");
+
+    Ok(())
+}
+
+pub fn walk_dir<F: FnMut(PathBuf) -> Result<()> + Sized, P: Into<PathBuf>>(
+    path: P,
+    mut f: F,
+) -> Result<()> {
     let mut todo = vec![path.into()];
 
     while let Some(dir) = todo.pop() {
         for entry in fs::read_dir(&dir)? {
             let entry = entry?;
-
             if entry.file_type()?.is_dir() {
                 todo.push(entry.path())
-            } else if entry.path().extension().and_then(|s| s.to_str()) == Some("entry") {
-                println!("Loading {:?}", entry.path());
-                parse_entry_file(state, entry.path())?;
+            } else if entry.file_type()?.is_file() {
+                f(entry.path())?;
             }
         }
     }
@@ -35,6 +51,7 @@ const DEBUG: bool = false;
 pub fn parse_entry_file(state: &mut State, path: PathBuf) -> Result<()> {
     const INCLUDE_TOKEN: &str = "#include";
     const CARGO_TOKEN: &str = "#cargo";
+    const DIRECTORY_TOKEN: &str = "#dir";
     const CONTENT_TOKEN: &str = "<<";
 
     let mut f = File::open(&path)?;
@@ -69,8 +86,7 @@ pub fn parse_entry_file(state: &mut State, path: PathBuf) -> Result<()> {
                 state
                     .data
                     .insert(hash.clone(), DataSource::Memory(Arc::new(data.into())));
-                //println!("Adding via File {}", &name);
-                //println!("\t\tTags : {:?}", &tags);
+
                 state.entries.insert(
                     name.clone(),
                     Entry {
@@ -81,6 +97,40 @@ pub fn parse_entry_file(state: &mut State, path: PathBuf) -> Result<()> {
                 );
 
                 break;
+            } else if line.starts_with(DIRECTORY_TOKEN) {
+                let arg = &line[DIRECTORY_TOKEN.len()..];
+                let arg = arg.trim();
+
+                let mut path = path.clone();
+                path.pop(); // pop "*.entry" file
+                path.push(arg);
+                println!("Walking {:?}", &path);
+                walk_dir(path, |path| {
+                    let mut data = vec![];
+                    println!("      * {:?}", &path);
+
+                    let mut file = File::open(&path)?;
+                    file.read_to_end(&mut data)?;
+
+                    let hash = HashRef::from_data(&data);
+
+                    state
+                        .data
+                        .insert(hash.clone(), DataSource::Memory(Arc::new(data.into())));
+
+                    let name = format!("{}/{}", name, path.file_name().unwrap().to_str().unwrap());
+
+                    state.entries.insert(
+                        name.clone(),
+                        Entry {
+                            name: name.clone(),
+                            data: hash.clone(),
+                            tags: tags.clone(),
+                        },
+                    );
+                    Ok(())
+                })
+                .expect("Failed adding files.");
             } else if line.starts_with(CARGO_TOKEN) {
                 let arg = &line[CARGO_TOKEN.len()..];
                 let arg = arg.trim();
@@ -110,8 +160,29 @@ pub fn parse_entry_file(state: &mut State, path: PathBuf) -> Result<()> {
                     panic!("Aborting... Cargo returned with != 0");
                 }
 
-                let proj_name = path.components().last().unwrap().as_os_str().to_owned();
-                path.push("target");
+                // Fake Parse Cargo.toml #hack to get
+                // name of binary
+                let proj_name = {
+                    let mut cargo_toml = path.clone();
+                    cargo_toml.push("Cargo.toml");
+                    let mut buf = String::new();
+                    File::open(cargo_toml)
+                        .expect("Didn't find Cargo.toml")
+                        .read_to_string(&mut buf)
+                        .expect("Cargo.toml has invalid UTF-8");
+
+                    buf.lines().flat_map(|line| {
+                        let mut split = line.splitn(2,"=").map(|s| s.trim());
+                        if let (Some("name"), Some(value)) = (split.next(),split.next()) {
+                            Some(value.replace("\"", ""))
+                        }else {
+                            None
+                        }
+                    }).next()
+                        .expect(
+                        "Didn't find name in Cargo.toml. Maybe this parser isn't advanced enough. \
+                        Use this format: `name = \"my_plugin\"`.")
+                };
 
                 if DEBUG {
                     path.push("debug");
@@ -119,7 +190,22 @@ pub fn parse_entry_file(state: &mut State, path: PathBuf) -> Result<()> {
                     path.push("release");
                 }
 
-                path.push(proj_name);
+                path.push(&proj_name);
+
+                if !path.exists() {
+                    // Fallback to path, in own workspace.
+
+                    path = PathBuf::new();
+                    path.push("target");
+                    if DEBUG {
+                        path.push("debug");
+                    } else {
+                        path.push("release");
+                    }
+                    path.push(&proj_name);
+                }
+
+                println!("{:?}", &path);
 
                 if !DEBUG {
                     if let Ok(_) = std::env::var("USE_STRIP") {
@@ -128,7 +214,7 @@ pub fn parse_entry_file(state: &mut State, path: PathBuf) -> Result<()> {
 
                     if let Ok(_) = std::env::var("USE_UPX") {
                         let _ = Command::new("upx")
-                            .arg("--best")
+                            .arg("--brute")
                             .arg(&path)
                             .spawn()
                             .unwrap()
@@ -194,7 +280,7 @@ pub fn parse_entry_file(state: &mut State, path: PathBuf) -> Result<()> {
                 let mut tag = line.trim().splitn(2, " ");
                 match (tag.next(), tag.next()) {
                     (Some(a), value) if !a.is_empty() => {
-                        tags.insert(Tag::new(a, value));
+                        tags.insert(Tag::new(a.trim(), value.map(|v| v.trim())));
                     }
                     (Some(_empty), _value) => {
                         // skip

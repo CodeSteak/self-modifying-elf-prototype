@@ -1,0 +1,4 @@
+command/web
+    type ELF
+    command web
+#cargo .

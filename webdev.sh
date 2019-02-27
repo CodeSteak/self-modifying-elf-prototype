@@ -1,7 +1,7 @@
 #!/bin/sh
 
 while true; do
-    OVERLAY="./overlay/util/web" OVERLAY_WATCH="./overlay/util/web/static" cargo run web
-    echo crashed -- restart in 10 sec
+    OVERLAY="./command_web" OVERLAY_WATCH="./command_web/static" cargo run --release -p microwiki web
+    echo crashed -- restart in 3 sec
     sleep 3;
 done

@@ -54,7 +54,7 @@ impl MainContent for &[(Entry, String)] {
 pub(crate) fn main<S: MainContent + Sized>(req: &HttpRequest<AppState>, items: S) -> HttpResponse {
     let ctx = &req.state().ctx;
 
-    let styles = core::entry::query(ctx, &QueryOperation::ByTagName("web-ui/style".into()))
+    let styles = core::entry::query(ctx, &QueryOperation::ByTagName("web/style".into()))
         .into_iter()
         .map(|e| {
             format!(
@@ -66,7 +66,7 @@ pub(crate) fn main<S: MainContent + Sized>(req: &HttpRequest<AppState>, items: S
         .collect::<Vec<_>>()
         .join("\n\t\t");
 
-    let scripts = core::entry::query(ctx, &QueryOperation::ByTagName("web-ui/script".into()))
+    let scripts = core::entry::query(ctx, &QueryOperation::ByTagName("web/script".into()))
         .into_iter()
         .map(|e| {
             format!(
@@ -99,19 +99,17 @@ pub(crate) fn main<S: MainContent + Sized>(req: &HttpRequest<AppState>, items: S
                     {sections}
                 </main>
                 <nav>
-                    <p>
+                    <section>
                     <a href="{url_new}">Create new</a>
-                    </p>
-                    <p>
+                    </section>
                     <form action="/entry/" method="get">
                         <input type="text" name="q"/>
-                        <input type="submit" value="Search">
+                        <input type="submit" value="Search"/>
                     </form>
-                    </p>
                 </nav>
                 {scripts}
                 {html_footer}
-            <body>
+            </body>
         </html>
     "#,
         styles = styles,

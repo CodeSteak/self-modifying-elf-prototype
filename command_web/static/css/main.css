@@ -1,0 +1,71 @@
+body {
+  margin: 0em;
+
+  /* vars */
+  --p:  darkslategrey; /*Primary*/
+  --pa: black; /*Primary accent*/
+
+  --s: white;
+  --sa: #FDFDFD;
+
+  /* ---- */
+  display: grid;
+  grid-template-areas:
+    "head head"
+    " nav cont"
+    "foot foot";
+
+  grid-template-columns: minmax(3em, auto) 1fr;
+  grid-template-rows: auto;
+
+  font-family: 'Fira Sans', sans-serif;
+  font-weight: normal;
+  line-height: 125%;
+
+  background-color: var(--s);
+  color: var(--p);
+}
+
+nav {
+    grid-area: nav;
+
+    background-color: var(--s);
+    color: var(--bg);
+
+    line-height: 200%;
+
+    min-height: 100vh;
+}
+
+nav > * + *::before {
+    content: "";
+    display: block;
+    height: 1px;
+    background-color: var(--bg);
+
+    width: 80%;
+
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+nav a {
+  color : inherit;
+  text-decoration: none;
+}
+
+nav input {
+    display: block;
+    box-sizing : border-box;
+
+    width: 100%;
+}
+
+main {
+    grid-area: cont;
+    width: 100%;
+    max-width: 60em;
+    margin: 0em auto;
+}

@@ -1,8 +1,0 @@
-command/web
-    type ELF
-    command web
-#cargo .
-
-test.html
-    type html
-#include static/test.html

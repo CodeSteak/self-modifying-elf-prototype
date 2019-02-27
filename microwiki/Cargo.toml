@@ -1,0 +1,15 @@
+[package]
+name = "microwiki"
+version = "0.1.0"
+authors = ["CodeSteak <codesteak@shellf.art>"]
+edition = "2018"
+
+[dependencies]
+ipc = {path = "../ipc"}
+plugin = {path = "../plugin"}
+
+lazy_static = "1.2.0"
+nix = "0.13"
+serde = { version = "1.0", features = ["derive", "rc"] }
+blake2-rfc = "0.2.18"
+notify = "4.0.0"

@@ -7,7 +7,7 @@ rm -Rf out
 mkdir -p out
 
 # Create Playload
-    cargo build
+    cargo build -p microwiki
     mv target/debug/microwiki out/payload
 
 # build out/loader.a
@@ -20,7 +20,7 @@ mkdir -p out
 	cat out/payload >> out/loader.a
 	
 # build microwiki via loader.a
-	OVERLAY="./overlay" out/loader.a export -o out/microwiki
+	OVERLAY="." out/loader.a export -o out/microwiki
 	chmod +x out/microwiki
 	
 # "Voila"
