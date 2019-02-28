@@ -57,7 +57,7 @@ fn normal_main(context: Context) {
 
     let q = QueryOperation::And(vec![
         QueryOperation::ByTag(prelude::Tag::new("command", cmd.as_str())),
-        QueryOperation::ByTag(prelude::Tag::new("type", "ELF")),
+        QueryOperation::ByTag(prelude::Tag::new("type", "elf")),
     ]);
     let entities = crate::core::entry::query((), q);
     let ent = entities.get(0).expect("Command Not Found!");
@@ -114,7 +114,7 @@ fn overlay_main(context: Context, mut dir: String) {
 
         let q = QueryOperation::And(vec![
             QueryOperation::ByTag(prelude::Tag::new("command", cmd.as_str())),
-            QueryOperation::ByTag(prelude::Tag::new("type", "ELF")),
+            QueryOperation::ByTag(prelude::Tag::new("type", "elf")),
         ]);
 
         let entities = crate::core::entry::query((), q);

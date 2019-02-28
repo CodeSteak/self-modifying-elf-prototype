@@ -1,4 +1,4 @@
 command/web
-    type ELF
+    type elf
     command web
 #cargo .

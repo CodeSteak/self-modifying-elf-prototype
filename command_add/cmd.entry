@@ -1,4 +1,4 @@
 command/add
-    type ELF
+    type elf
     command add
 #cargo .
