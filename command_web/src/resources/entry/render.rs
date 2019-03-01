@@ -102,7 +102,7 @@ fn render_syntax(ctx: &TypeRenderer) -> Option<String> {
 }
 
 fn render_text(ctx: &TypeRenderer) -> Option<String> {
-    ctx.escaped()
+    format!("<pre>{}</pre>", &ctx.escaped()?).into()
 }
 
 fn render_html(ctx: &TypeRenderer) -> Option<String> {

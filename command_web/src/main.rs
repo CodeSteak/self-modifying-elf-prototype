@@ -12,6 +12,8 @@ mod util;
 use util::*;
 
 fn main() {
+    const ADDR : &'static str = "[::1]:8080";
+
     let ch: Channel = Channel::new_from_env(());
 
     let sys = actix::System::new("sys");
@@ -33,9 +35,11 @@ fn main() {
                 r.f(|_| HttpResponse::NotFound().body("<h1>404</h1><h3>Not found!</h3>"))
             })
     })
-    .bind("[::1]:8080")
+    .bind(ADDR)
     .unwrap()
     .start();
+
+    println!("Listening on {}", ADDR);
 
     let _ = sys.run();
 }

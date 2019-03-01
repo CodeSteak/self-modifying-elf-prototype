@@ -1,6 +1,6 @@
 use crate::util::*;
-use std::collections::BTreeSet;
 use serde::Deserialize;
+use std::collections::BTreeSet;
 
 #[derive(Deserialize)]
 pub(crate) struct EntryUpload {
@@ -9,7 +9,9 @@ pub(crate) struct EntryUpload {
     pub(crate) data: String,
     pub(crate) tags: String,
 }
-pub(crate) fn entry_upload((data, req): (Form<EntryUpload>, HttpRequest<AppState>)) -> HttpResponse {
+pub(crate) fn entry_upload(
+    (data, req): (Form<EntryUpload>, HttpRequest<AppState>),
+) -> HttpResponse {
     let content = data.data.clone().into_bytes();
     let hash_ref = HashRef::from_data(&content);
 

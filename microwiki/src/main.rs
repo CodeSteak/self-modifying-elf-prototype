@@ -52,6 +52,31 @@ fn main() {
     }
 }
 
+fn show_known_commands() {
+    println!("Known Commands:");
+    let q = QueryOperation::And(vec![
+        QueryOperation::ByTagName("command".to_string()),
+        QueryOperation::ByTag(prelude::Tag::new("type", "elf")),
+    ]);
+    let entities = crate::core::entry::query((), q);
+    for e in entities {
+        println!(
+            "\t {}   {}",
+            e.tags
+                .iter()
+                .find(|t| t.name == "command")
+                .unwrap()
+                .value
+                .as_ref()
+                .map(|s| s.as_str())
+                .unwrap_or("??"),
+            e.name
+        );
+    }
+
+    return;
+}
+
 fn normal_main(context: Context) {
     let cmd = std::env::args().nth(1).expect("1 Argument needed");
 
@@ -97,8 +122,6 @@ fn overlay_main(context: Context, mut dir: String) {
         _tx_deamon = Some(tx);
     }
 
-    let cmd = std::env::args().nth(1).expect("1 Argument needed");
-
     extern "C" fn die_on_signal(_signal: i32) {
         std::process::exit(0);
     }
@@ -112,13 +135,21 @@ fn overlay_main(context: Context, mut dir: String) {
             }
         };
 
+        let cmd = std::env::args().nth(1).unwrap_or_else(|| {
+            show_known_commands();
+            std::process::exit(1)
+        });
+
         let q = QueryOperation::And(vec![
             QueryOperation::ByTag(prelude::Tag::new("command", cmd.as_str())),
             QueryOperation::ByTag(prelude::Tag::new("type", "elf")),
         ]);
 
         let entities = crate::core::entry::query((), q);
-        let ent = entities.get(0).expect("Command Not Found!");
+        let ent = entities.get(0).unwrap_or_else(|| {
+            show_known_commands();
+            std::process::exit(1)
+        });
 
         let args = std::env::args().skip(1).collect::<Vec<String>>();
 

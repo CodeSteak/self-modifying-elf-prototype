@@ -6,7 +6,9 @@ pub(crate) struct EntryDelete {
     pub(crate) old_name: String,
 }
 
-pub(crate) fn entry_delete((data, req): (Form<EntryDelete>, HttpRequest<AppState>)) -> HttpResponse {
+pub(crate) fn entry_delete(
+    (data, req): (Form<EntryDelete>, HttpRequest<AppState>),
+) -> HttpResponse {
     let b = core::entry::write(
         &req.state().ctx,
         &WriteEntry {

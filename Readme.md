@@ -70,6 +70,8 @@ Since some bootstrapping is needed, `build.sh` can be used to build the
 executable. For building ~~`rust`~~ `cargo`, `clang`, `gnu-binutils` and `upx` are required.
 The executable can be found at `out/microwiki`.
 
+Or run in debug mode with `OVERLAY="." cargo run -p microwiki`.
+
 ---
 
 ## Known Bugs

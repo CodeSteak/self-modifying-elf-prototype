@@ -1,6 +1,6 @@
 use crate::util::*;
 
-pub(crate) fn get_entry(req : &HttpRequest<AppState>) -> HttpResponse {
+pub(crate) fn get_entry(req: &HttpRequest<AppState>) -> HttpResponse {
     if req.query().contains_key("edit") {
         entry_show_edit(req)
     } else {
@@ -17,7 +17,7 @@ fn entry_show(req: &HttpRequest<AppState>) -> HttpResponse {
         let content = super::render::render_entry(req, &item);
         Some(super::templates::main(req, (item, content)))
     })()
-        .unwrap_or_else(|| HttpResponse::NotFound().body("Not Found!"))
+    .unwrap_or_else(|| HttpResponse::NotFound().body("Not Found!"))
 }
 
 fn entry_show_edit(req: &HttpRequest<AppState>) -> HttpResponse {
@@ -83,9 +83,8 @@ fn entry_show_edit(req: &HttpRequest<AppState>) -> HttpResponse {
 
         Some(super::templates::main(req, cont))
     })()
-        .unwrap_or_else(|| HttpResponse::NotFound().body("Not Found!"))
+    .unwrap_or_else(|| HttpResponse::NotFound().body("Not Found!"))
 }
-
 
 pub(crate) fn entry_search(req: HttpRequest<AppState>) -> HttpResponse {
     let ctx = &req.state().ctx;
@@ -98,12 +97,12 @@ pub(crate) fn entry_search(req: HttpRequest<AppState>) -> HttpResponse {
                 QueryOperation::HasInTagName(q.clone()),
             ]),
         )
-            .into_iter()
-            .flat_map(|item| {
-                let content = super::render::render_entry(&req, &item);
-                Some((item, content))
-            })
-            .collect();
+        .into_iter()
+        .flat_map(|item| {
+            let content = super::render::render_entry(&req, &item);
+            Some((item, content))
+        })
+        .collect();
 
         return super::templates::main(&req, &items[..]);
     }

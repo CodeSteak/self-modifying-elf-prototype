@@ -5,7 +5,7 @@ use serde::Deserialize;
 pub(crate) struct EntryUploadOrDelete {
     pub(crate) old_name: Option<String>,
     pub(crate) name: Option<String>,
-    pub(crate)  data: Option<String>,
+    pub(crate) data: Option<String>,
     pub(crate) tags: Option<String>,
 }
 
@@ -54,5 +54,3 @@ pub(crate) fn entry_upload_or_delete(
 
     HttpResponse::BadRequest().body("Invalid Format!")
 }
-
-

@@ -72,7 +72,7 @@ fn main() {
             let name = add_file(&ctx, &name, &path);
             let libs = find_dynlibs(&ctx, &name, &path);
             for lib in libs.into_iter() {
-                println!("lib : {}", &lib);
+                println!("\tadded dyn lib {}", &lib);
                 add_tag(&ctx, &name, "lib", Some(&lib));
             }
             for tag in tags {
@@ -91,6 +91,8 @@ fn main() {
             add_tag(&ctx, &name, &tag, value.as_ref().map(|d| d.as_str()));
         }
     }
+
+    println!("Okay");
 }
 
 fn find_dynlibs(ctx: &Channel, prefix: &str, path: &PathBuf) -> Vec<String> {
